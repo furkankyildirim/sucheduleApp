@@ -6,6 +6,7 @@ import Colors from './utils/Colors';
 import fontStyles from './utils/FontStyles';
 import Icon from 'react-native-vector-icons/dist/Entypo';
 import Home from './screens/Home';
+import CourseDetail from './screens/CourseDetail';
 
 LogBox.ignoreAllLogs(true);
 const Stack = createNativeStackNavigator();
@@ -49,10 +50,14 @@ const App = () => {
             headerStyle: { backgroundColor: Colors.blue1, },
             headerLeft: () => <HeaderLeft />,
             headerRight: () => <HeaderRight />,
+          }}
+        />
+        <Stack.Screen name="CourseDetail" component={CourseDetail}
+          options={{
+            title: 'SUchedule',
+            headerStyle: { backgroundColor: Colors.blue1},
             headerTintColor: Colors.white,
-            headerTitleStyle: {
-              fontWeight: 'bold',
-            },
+            headerTitleStyle: fontStyles.courseDetailTitle
           }}
         />
       </Stack.Navigator>

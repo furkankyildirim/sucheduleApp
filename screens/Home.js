@@ -9,7 +9,7 @@ import { observer } from 'mobx-react';
 import Colors from '../utils/Colors';
 import Durations from '../utils/Durations'
 
-const Home = observer(() => {
+const Home = observer(({ navigation }) => {
 
   const [layoutWidth, setLayoutWidth] = useState(0);
   const [layoutHeight, setLayoutHeight] = useState(0);
@@ -109,7 +109,7 @@ const Home = observer(() => {
         <Icon name='menu' style={fontStyles.largeIcons} />
       </TouchableOpacity>
 
-      {drawerVisibility ? <Drawer data={data}/> : <View/>}
+      {drawerVisibility ? <Drawer data={data} navigation={navigation}/> : <View/>}
 
       <ScrollView horizontal={true}
         showsVerticalScrollIndicator={false}

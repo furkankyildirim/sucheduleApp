@@ -78,6 +78,12 @@ const fontStyles = StyleSheet.create({
     color: Colors.grey5,
     fontSize:14,
     fontWeight:'500'
+  },
+  courseDetailTitle:{
+    fontSize: 18,
+    color: defaultColor,
+    fontWeight: '600',
+    fontFamily: fontFamily
   }
 })
 

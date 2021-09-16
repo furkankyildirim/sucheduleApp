@@ -8,7 +8,7 @@ import Constants from '../utils/Constants';
 import Durations from '../utils/Durations';
 import fontStyles from '../utils/FontStyles';
 
-const Drawer = ({ data }) => {
+const Drawer = ({ data, navigation }) => {
 
   const isDarkMode = useColorScheme() === 'dark';
   const [searchType, setSearchType] = useState("course");
@@ -179,7 +179,8 @@ const Drawer = ({ data }) => {
     return (
       <TouchableOpacity style={CourseSectionStyle}>
         <View style={{ width: '75%' }}>
-          <TouchableOpacity style={InfoButtonStyle}>
+          <TouchableOpacity style={InfoButtonStyle}
+            onPress={() => navigation.push('CourseDetail', { url: data.infoLink + item.crn })}>
             <View style={GroupStyle}>
               <Text style={fontStyles.groupTitle}>{item.group}</Text>
             </View>
@@ -213,9 +214,9 @@ const Drawer = ({ data }) => {
     const day = item.day < 5 ? Durations[item.day + 1].key : 'TBA';
     const start = item.start > -1 ?
       (8 + item.start).toLocaleString('en-US', { minimumIntegerDigits: 2, useGrouping: false }) + ':40' : 'TBA';
-    const end = item.duration > -1 ? 
+    const end = item.duration > -1 ?
       '-' + (item.start + item.duration + 8).toLocaleString('en-US', { minimumIntegerDigits: 2, useGrouping: false }) + ':30'
-       : null;
+      : null;
     const place = data.places[item.place]
 
     return (
