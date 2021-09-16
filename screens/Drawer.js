@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, Animated, StyleSheet, TextInput, TouchableOpacity, useColorScheme } from 'react-native';
-import { FlatList } from 'react-native-gesture-handler';
+import { View, Text, Animated, StyleSheet, TextInput,FlatList, TouchableOpacity, useColorScheme } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 import Icon from 'react-native-vector-icons/dist/FontAwesome';
 import Colors from '../utils/Colors';
@@ -8,7 +7,7 @@ import Constants from '../utils/Constants';
 import Durations from '../utils/Durations';
 import fontStyles from '../utils/FontStyles';
 
-const Drawer = ({ data, navigation }) => {
+const Drawer = ({ data, navigation, visibility}) => {
 
   const isDarkMode = useColorScheme() === 'dark';
   const [searchType, setSearchType] = useState("course");
@@ -315,6 +314,7 @@ const Drawer = ({ data, navigation }) => {
 
 
   const DrawerStyle = StyleSheet.compose({
+    display: visibility ? 'flex' : 'none',
     backgroundColor: Colors.blue4,
     width: Constants.DRAWER_WIDTH,
     padding: 10,
@@ -373,11 +373,9 @@ const Drawer = ({ data, navigation }) => {
         />
       </View>
 
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginVertical: 15, }}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginVertical: 15, alignItems:'center' }}>
           <Icon name='calendar' style={fontStyles.headerIcons} />
-          <Text style={{ ...fontStyles.smallTitle, marginHorizontal: 10, }}>Day</Text>
-        </View>
+          <Text style={{ ...fontStyles.smallTitle}}>Day</Text>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <DayContainer text='MON' index={0} />
           <DayContainer text='TUE' index={1} />

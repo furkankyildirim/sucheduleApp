@@ -1,6 +1,7 @@
 import React, { Component, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { WebView } from 'react-native-webview';
+import Colors from '../utils/Colors';
 
 const CourseDetail = ({ route, navigation }) => {
   const { url } = route.params;
@@ -13,11 +14,11 @@ const CourseDetail = ({ route, navigation }) => {
         onLoad={() => setVisible(false)}
         source={{ uri: url }} />
       {visible
-        ? <ActivityIndicator
+        && <ActivityIndicator
           style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
-          size="large"
+          size="large" color={Colors.blue1}
         />
-        : null}
+        }
     </View>
 
   );

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, ScrollView, TouchableOpacity,Dimensions } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import NetInfo from "@react-native-community/netinfo";
 import Icon from 'react-native-vector-icons/dist/Entypo';
 import axios from 'axios';
 import Drawer from './Drawer'
@@ -16,18 +18,19 @@ const Home = observer(({ navigation }) => {
   const [drawerVisibility, setDrawerVisibility] = useState(false);
   const [data, setData] = useState(null);
 
-  useEffect(async () => {
-    await getSUchedule();
-  }, []);
+  useEffect(() => NetInfo.fetch().then(async state => {
+    if (state.isConnected) {
+      const response = await axios.get('http://46.235.14.53:5000/suchedule/data');
+      setData(response.data);
+      AsyncStorage.setItem('@data', JSON.stringify(response.data));
+    } else {
+      setData(JSON.parse(await AsyncStorage.getItem('@data')));
+    }
+  }), []);
 
   const setLayout = (event) => {
     setLayoutWidth(event.nativeEvent.layout.width);
     setLayoutHeight(event.nativeEvent.layout.height);
-  }
-
-  const getSUchedule = async () => {
-    const response = await axios.get('http://46.235.14.53:5000/suchedule/data');
-    setData(response.data);    
   }
 
   const GridRow = ({ item, index }) => {
@@ -36,8 +39,8 @@ const Home = observer(({ navigation }) => {
       : (index % 2 === 0 ? Colors.grey1 : Colors.grey3)
 
     const width = item.dayId === 0
-      ? layoutWidth *  0.16
-      : layoutWidth *  0.36
+      ? layoutWidth * 0.16
+      : layoutWidth * 0.36
 
     const GridRowStyle = StyleSheet.compose({
       backgroundColor: bgColor,
@@ -56,8 +59,8 @@ const Home = observer(({ navigation }) => {
 
   const GridColumn = ({ item, index }) => {
     const width = index === 0
-    ? layoutWidth *  0.16
-    : layoutWidth *  0.36
+      ? layoutWidth * 0.16
+      : layoutWidth * 0.36
 
     const bgColor = index % 2 === 0 ? Colors.blue2 : Colors.blue3
 
@@ -95,7 +98,7 @@ const Home = observer(({ navigation }) => {
     width: Constants.DRAWER_BUTTON_SIZE,
     height: Constants.DRAWER_BUTTON_SIZE,
     top: 0,
-    left: drawerVisibility ? Constants.DRAWER_WIDTH: 0,
+    left: drawerVisibility ? Constants.DRAWER_WIDTH : 0,
     backgroundColor: Colors.black1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -103,27 +106,29 @@ const Home = observer(({ navigation }) => {
   });
 
   return (
-    <View style={{ flex: 1, flexDirection: 'row'}} onLayout={(event) => setLayout(event)}>
+    data
+      ? <View style={{ flex: 1, flexDirection: 'row' }} onLayout={(event) => setLayout(event)}>
+        <TouchableOpacity style={DrawerButtonStyle} onPress={() => setDrawerVisibility(!drawerVisibility)}>
+          <Icon name='menu' style={fontStyles.largeIcons} />
+        </TouchableOpacity>
+        <Drawer data={data} navigation={navigation} visibility={drawerVisibility} />
+        <ScrollView horizontal={true}
+          showsVerticalScrollIndicator={false}
+          showsHorizontalScrollIndicator={false}>
+          <FlatList
+            renderItem={GridColumn}
+            data={Durations}
+            keyExtractor={item => item.id}
+            numColumns={Durations.length}
+            scrollEnabled={false}
+          />
+        </ScrollView>
+      </View>
 
-      <TouchableOpacity style={DrawerButtonStyle} onPress={() => setDrawerVisibility(!drawerVisibility)}>
-        <Icon name='menu' style={fontStyles.largeIcons} />
-      </TouchableOpacity>
-
-      {drawerVisibility ? <Drawer data={data} navigation={navigation}/> : <View/>}
-
-      <ScrollView horizontal={true}
-        showsVerticalScrollIndicator={false}
-        showsHorizontalScrollIndicator={false}
-      >
-        <FlatList
-          renderItem={GridColumn}
-          data={Durations}
-          keyExtractor={item => item.id}
-          numColumns={Durations.length}
-          scrollEnabled={false}
-        />
-      </ScrollView>
-    </View>
+      : <ActivityIndicator
+        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+        size="large" color={Colors.blue1}
+      />
   );
 });
 

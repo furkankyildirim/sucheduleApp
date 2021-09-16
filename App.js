@@ -55,6 +55,7 @@ const App = () => {
         <Stack.Screen name="CourseDetail" component={CourseDetail}
           options={{
             title: 'SUchedule',
+            gestureEnabled:true,
             headerStyle: { backgroundColor: Colors.blue1},
             headerTintColor: Colors.white,
             headerTitleStyle: fontStyles.courseDetailTitle
