@@ -109,6 +109,31 @@ const Drawer = observer(({ data, navigation, visibility }) => {
     }
   }
 
+  const deleteSchedule = item => {
+    const crn = item.crn;
+    let removedCode;
+
+    for (const code in SelectedCourseList) {
+      for (i = 0; i < SelectedCourseList[code].sections.length; i++) {
+        if (crn === SelectedCourseList[code].sections[i].crn) {
+          removedCode = code;
+          SelectedCourseList[code].sections.splice(i, 1);
+          SelectedCourseList[code].types.splice(i, 1);
+          break;
+        }
+      }
+    }
+
+    for (i = 1; i < Durations.length; i++) {
+      for (j = 0; j < Durations[i].hour.length; j++) {
+        const spaceIndex = Durations[i].hour[j].key.indexOf(' ');
+        if (Durations[i].hour[j].key.slice(0, spaceIndex) === removedCode) {
+          Durations[i].hour[j].key = '';
+        }
+      }
+    }
+  }
+
   const filterData = () => {
     let filteredData = [];
 
@@ -219,6 +244,18 @@ const Drawer = observer(({ data, navigation, visibility }) => {
     );
   }
 
+  const isActive = crn => {
+    for (const code in SelectedCourseList) {
+      for (i = 0; i < SelectedCourseList[code].sections.length; i++) {
+        if (crn === SelectedCourseList[code].sections[i].crn) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
 
   const CourseSection = ({ item, index }) => {
     const CourseSectionStyle = StyleSheet.compose({
@@ -250,8 +287,8 @@ const Drawer = observer(({ data, navigation, visibility }) => {
     })
 
     return (
-      <TouchableOpacity style={CourseSectionStyle} onPress={() => setSchedule(item)}>
-        <View style={{ width: '75%' }}>
+      <TouchableOpacity style={CourseSectionStyle} onPress={() => !isActive(item.crn) ? setSchedule(item) : deleteSchedule(item)}>
+        <View style={{ flex: 3 }}>
           <TouchableOpacity style={InfoButtonStyle}
             onPress={() => navigation.push('CourseDetail', { url: data.infoLink + item.crn })}>
             <View style={GroupStyle}>
@@ -275,8 +312,10 @@ const Drawer = observer(({ data, navigation, visibility }) => {
           />
         </View>
 
-        <View style={{ width: '75%', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-          <View style={{ width: 30, height: 30, borderWidth: 0.75, }} />
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <View style={{ width: 30, height: 30, borderWidth: 0.75, alignItems: 'center', justifyContent: 'center' }}>
+            {isActive(item.crn) && <Icon name='check' style={fontStyles.checkIcon} />}
+          </View>
         </View>
       </TouchableOpacity>
     );

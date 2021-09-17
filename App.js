@@ -39,7 +39,7 @@ const HeaderLeft = () => {
 
 const HeaderButton = observer(({ button, operation }) => {
   return (
-    <TouchableOpacity onPress={operation()}>
+    <TouchableOpacity onPress={operation}>
       <Icon name={button} style={{
         ...fontStyles.headerIcons,
         marginHorizontal: 7.5
@@ -51,7 +51,7 @@ const HeaderButton = observer(({ button, operation }) => {
 const HeaderRight = () => {
   return (
     <View style={{ flexDirection: 'row' }}>
-      <HeaderButton button="trash" operation={() => clearAll} />
+      <HeaderButton button="trash" operation={() => clearAll()} />
       <HeaderButton button="clipboard" operation={() => { }} />
       <HeaderButton button="calendar" operation={() => { }} />
     </View>

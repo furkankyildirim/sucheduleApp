@@ -84,6 +84,12 @@ const fontStyles = StyleSheet.create({
     color: defaultColor,
     fontWeight: '600',
     fontFamily: fontFamily
+  },
+  checkIcon:{
+    fontSize: 24,
+    right:0,
+    position:'absolute',
+    color: Colors.green
   }
 })
 

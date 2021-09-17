@@ -20,5 +20,7 @@ export default {
     grey4: 'rgba(239, 237, 238, 1.0)',
     grey5: 'rgba(137, 137, 137, 1.0)',
 
+    green: 'rgba(161, 204, 47, 1.0)',
+
     transparent: 'transparent',
 }
