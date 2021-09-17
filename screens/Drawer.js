@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, Animated, StyleSheet, TextInput,FlatList, TouchableOpacity, useColorScheme } from 'react-native';
+import { View, Text, Animated, StyleSheet, TextInput, FlatList, TouchableOpacity, useColorScheme } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 import Icon from 'react-native-vector-icons/dist/FontAwesome';
 import Colors from '../utils/Colors';
@@ -7,7 +7,7 @@ import Constants from '../utils/Constants';
 import Durations from '../utils/Durations';
 import fontStyles from '../utils/FontStyles';
 
-const Drawer = ({ data, navigation, visibility}) => {
+const Drawer = ({ data, navigation, visibility }) => {
 
   const isDarkMode = useColorScheme() === 'dark';
   const [searchType, setSearchType] = useState("course");
@@ -75,41 +75,37 @@ const Drawer = ({ data, navigation, visibility}) => {
       }
 
       else if (searchType == 'instructor') {
-        filteredData = filteredData.filter(course => {
-          for (i = 0; i < course.classes.length; i++) {
-            for (j = 0; j < course.classes[i].sections.length; j++) {
-              const id = course.classes[i].sections[j].instructors;
+        let instructorFilter = [];
+        for (i = 0; i < filteredData.length; i++) {
+          const course = { classes: [], code: filteredData[i].code, name: filteredData[i].name };
+          for (j = 0; j < filteredData[i].classes.length; j++) {
+            const cls = { sections: [], type: filteredData[i].classes[j].type }
+            for (k = 0; k < filteredData[i].classes[j].sections.length; k++) {
+              const section = {
+                crn: filteredData[i].classes[j].sections[k].crn,
+                group: filteredData[i].classes[j].sections[k].group,
+                instructors: filteredData[i].classes[j].sections[k].instructors,
+                schedule: filteredData[i].classes[j].sections[k].schedule
+              }
+              const id = filteredData[i].classes[j].sections[k].instructors;
               if (
                 data.instructors[id].indexOf(searchText) > -1
                 || data.instructors[id].indexOf(searchText.toUpperCase()) > -1
                 || data.instructors[id].indexOf(searchText.toLowerCase()) > -1
               ) {
-                return true;
+                cls.sections.push(section);
               }
             }
+            cls.sections.length > 0 ? course.classes.push(cls) : null;
           }
-        })
-
-        for (i = 0; i < filteredData.length; i++) {
-          for (j = 0; j < filteredData[i].classes.length; j++) {
-            for (k = 0; k < filteredData[i].classes[j].sections.length; k++) {
-              const id = filteredData[i].classes[j].sections[k].instructors;
-              if (
-                data.instructors[id].indexOf(searchText) == -1
-                && data.instructors[id].indexOf(searchText.toUpperCase()) == -1
-                && data.instructors[id].indexOf(searchText.toLowerCase()) == -1
-              ) {
-                filteredData[i].classes[j].sections.splice(k, 1);
-              }
-            }
-          }
+          course.classes.length > 0 ? instructorFilter.push(course) : null;
         }
+        filteredData = instructorFilter;
       }
     }
 
     return filteredData;
   }
-
 
   const useOpen = [];
 
@@ -226,7 +222,6 @@ const Drawer = ({ data, navigation, visibility}) => {
   }
 
 
-
   const CourseContainer = ({ item, index }) => {
     const CourseContainerStyle = StyleSheet.compose({
       backgroundColor: Colors.grey4,
@@ -261,7 +256,6 @@ const Drawer = ({ data, navigation, visibility}) => {
           : null
         }
       </View>
-
     )
   }
 
@@ -310,7 +304,6 @@ const Drawer = ({ data, navigation, visibility}) => {
       </TouchableOpacity>
     )
   }
-
 
 
   const DrawerStyle = StyleSheet.compose({
@@ -373,9 +366,9 @@ const Drawer = ({ data, navigation, visibility}) => {
         />
       </View>
 
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginVertical: 15, alignItems:'center' }}>
-          <Icon name='calendar' style={fontStyles.headerIcons} />
-          <Text style={{ ...fontStyles.smallTitle}}>Day</Text>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginVertical: 15, alignItems: 'center' }}>
+        <Icon name='calendar' style={fontStyles.headerIcons} />
+        <Text style={{ ...fontStyles.smallTitle }}>Day</Text>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <DayContainer text='MON' index={0} />
           <DayContainer text='TUE' index={1} />
