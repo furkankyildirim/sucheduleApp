@@ -1,18 +1,19 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { View, Text, Animated, StyleSheet, TextInput, FlatList, TouchableOpacity, useColorScheme } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
+import { observer } from 'mobx-react';
 import Icon from 'react-native-vector-icons/dist/FontAwesome';
 import Colors from '../utils/Colors';
 import Constants from '../utils/Constants';
 import Durations from '../utils/Durations';
 import fontStyles from '../utils/FontStyles';
+import SelectedCourseList from '../utils/SelectedCourseList';
 
-const Drawer = ({ data, navigation, visibility }) => {
+const Drawer = observer(({ data, navigation, visibility }) => {
 
   const isDarkMode = useColorScheme() === 'dark';
   const [searchType, setSearchType] = useState("course");
   const [searchText, setSearchText] = useState('');
-
 
   const heights = [
     useRef(new Animated.Value(24)).current,
@@ -29,8 +30,86 @@ const Drawer = ({ data, navigation, visibility }) => {
     activeDays.push([active, setActive]);
   }
 
-  const filterData = () => {
+  const setSelectedCourse = course => {
 
+    let durationController = false;
+    const code = course.code
+    const type = course.sections[0].type;
+    const crn = course.sections[0].crn;
+
+    if (code in SelectedCourseList) {
+      if (SelectedCourseList[code].types.includes(type)) {
+        for (l = 0; l < SelectedCourseList[code].sections.length; l++) {
+          if (type === SelectedCourseList[code].sections[l].type && crn
+            !== SelectedCourseList[code].sections[l].crn) {
+            SelectedCourseList[code].sections[l] = course.sections[0];
+            durationController = true;
+          }
+        }
+      } else {
+        SelectedCourseList[code].types.push(type);
+        SelectedCourseList[code].sections.push(course.sections[0]);
+        durationController = true;
+      }
+    } else {
+      course.types.push(type);
+      SelectedCourseList[code] = course
+      durationController = true;
+    }
+
+    if (SelectedCourseList[code].types.length === SelectedCourseList[code].typeLenght && durationController) {
+      for (sec = 0; sec < SelectedCourseList[code].sections.length; sec++) {
+        for (d = 1; d < Durations.length; d++) {
+          for (e = 0; e < Durations[d].hour.length; e++) {
+            const spaceIndex = SelectedCourseList[code].sections[sec].lessonName.indexOf(' ');
+            const sectionCode = SelectedCourseList[code].sections[sec].lessonName.slice(0, spaceIndex);
+            if (Durations[d].hour[e].key.slice(0, spaceIndex) === sectionCode) {
+              Durations[d].hour[e].key = '';
+            }
+          }
+        }
+
+        const schedule = SelectedCourseList[code].sections[sec].schedule;
+        for (sch = 0; sch < schedule.length; sch++) {
+          for (duration = 0; duration < schedule[sch].duration; duration++) {
+            Durations[schedule[sch].day + 1].hour[schedule[sch].start + duration].key
+              = SelectedCourseList[code].sections[sec].lessonName;
+          }
+        }
+      }
+    }
+  }
+
+  const setSchedule = item => {
+    for (i = 0; i < data.courses.length; i++) {
+      const code = data.courses[i].code.replace(/\s/g, '');
+      for (j = 0; j < data.courses[i].classes.length; j++) {
+        const type = data.courses[i].classes[j].type;
+        for (k = 0; k < data.courses[i].classes[j].sections.length; k++) {
+          const crn = data.courses[i].classes[j].sections[k].crn;
+          const group = data.courses[i].classes[j].sections[k].group;
+          if (crn === item.crn) {
+            const lessonName = code + type + ' - ' + group;
+            const schedule = data.courses[i].classes[j].sections[k].schedule;
+            selectedCourse = {
+              sections: [{
+                type: type,
+                crn: crn,
+                schedule: schedule,
+                lessonName: lessonName,
+              }],
+              code: code,
+              typeLenght: data.courses[i].classes.length,
+              types: []
+            }
+            setSelectedCourse(selectedCourse);
+          }
+        }
+      }
+    }
+  }
+
+  const filterData = () => {
     let filteredData = [];
 
     for (i = 0; i < data.courses.length; i++) {
@@ -103,7 +182,6 @@ const Drawer = ({ data, navigation, visibility }) => {
         filteredData = instructorFilter;
       }
     }
-
     return filteredData;
   }
 
@@ -172,7 +250,7 @@ const Drawer = ({ data, navigation, visibility }) => {
     })
 
     return (
-      <TouchableOpacity style={CourseSectionStyle}>
+      <TouchableOpacity style={CourseSectionStyle} onPress={() => setSchedule(item)}>
         <View style={{ width: '75%' }}>
           <TouchableOpacity style={InfoButtonStyle}
             onPress={() => navigation.push('CourseDetail', { url: data.infoLink + item.crn })}>
@@ -386,6 +464,6 @@ const Drawer = ({ data, navigation, visibility }) => {
 
     </View>
   );
-}
+})
 
 export default Drawer;

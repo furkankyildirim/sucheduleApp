@@ -26,7 +26,7 @@ const Home = observer(({ navigation }) => {
     } else {
       setData(JSON.parse(await AsyncStorage.getItem('@data')));
     }
-  }), []);
+  }));
 
   const setLayout = (event) => {
     setLayoutWidth(event.nativeEvent.layout.width);
