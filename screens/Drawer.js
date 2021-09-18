@@ -7,7 +7,8 @@ import Colors from '../utils/Colors';
 import Constants from '../utils/Constants';
 import Durations from '../utils/Durations';
 import fontStyles from '../utils/FontStyles';
-import SelectedCourseList from '../utils/SelectedCourseList';
+import SelectedCourses from '../utils/SelectedCourses';
+import SelectedColors from '../utils/SelectedColors';
 
 const Drawer = observer(({ data, navigation, visibility }) => {
 
@@ -37,43 +38,56 @@ const Drawer = observer(({ data, navigation, visibility }) => {
     const type = course.sections[0].type;
     const crn = course.sections[0].crn;
 
-    if (code in SelectedCourseList) {
-      if (SelectedCourseList[code].types.includes(type)) {
-        for (l = 0; l < SelectedCourseList[code].sections.length; l++) {
-          if (type === SelectedCourseList[code].sections[l].type && crn
-            !== SelectedCourseList[code].sections[l].crn) {
-            SelectedCourseList[code].sections[l] = course.sections[0];
+    if (code in SelectedCourses) {
+      if (SelectedCourses[code].types.includes(type)) {
+        for (l = 0; l < SelectedCourses[code].sections.length; l++) {
+          if (type === SelectedCourses[code].sections[l].type && crn
+            !== SelectedCourses[code].sections[l].crn) {
+            SelectedCourses[code].sections[l] = course.sections[0];
             durationController = true;
           }
         }
       } else {
-        SelectedCourseList[code].types.push(type);
-        SelectedCourseList[code].sections.push(course.sections[0]);
+        SelectedCourses[code].types.push(type);
+        SelectedCourses[code].sections.push(course.sections[0]);
         durationController = true;
       }
     } else {
       course.types.push(type);
-      SelectedCourseList[code] = course
+      SelectedCourses[code] = course
       durationController = true;
     }
 
-    if (SelectedCourseList[code].types.length === SelectedCourseList[code].typeLenght && durationController) {
-      for (sec = 0; sec < SelectedCourseList[code].sections.length; sec++) {
-        for (d = 1; d < Durations.length; d++) {
-          for (e = 0; e < Durations[d].hour.length; e++) {
-            const spaceIndex = SelectedCourseList[code].sections[sec].lessonName.indexOf(' ');
-            const sectionCode = SelectedCourseList[code].sections[sec].lessonName.slice(0, spaceIndex);
-            if (Durations[d].hour[e].key.slice(0, spaceIndex) === sectionCode) {
-              Durations[d].hour[e].key = '';
-            }
+    if (SelectedCourses[code].types.length === SelectedCourses[code].typeLenght && durationController) {
+      for (d = 1; d < Durations.length; d++) {
+        for (e = 0; e < Durations[d].hour.length; e++) {
+          if (Durations[d].hour[e].data.code === code) {
+            const color = Durations[d].hour[e].data.color;
+            const colorIndex = SelectedColors.indexOf(color);
+            SelectedColors.slice(colorIndex, 1);
+
+            Durations[d].hour[e].data.title = '';
+            Durations[d].hour[e].data.code = '';
+            Durations[d].hour[e].data.crn = '';
+            Durations[i].hour[j].data.color = Colors.transparent;
           }
         }
+      }
 
-        const schedule = SelectedCourseList[code].sections[sec].schedule;
+      let color = Colors.colorPalette[Math.floor(Math.random()*Colors.colorPalette.length)];
+      while(SelectedColors.includes(color)){
+        color = Colors.colorPalette[Math.floor(Math.random()*Colors.colorPalette.length)];
+      }
+
+      for (sec = 0; sec < SelectedCourses[code].sections.length; sec++) {
+        const schedule = SelectedCourses[code].sections[sec].schedule;
         for (sch = 0; sch < schedule.length; sch++) {
           for (duration = 0; duration < schedule[sch].duration; duration++) {
-            Durations[schedule[sch].day + 1].hour[schedule[sch].start + duration].key
-              = SelectedCourseList[code].sections[sec].lessonName;
+            Durations[schedule[sch].day + 1].hour[schedule[sch].start + duration].data.title = SelectedCourses[code].sections[sec].lessonName;
+            Durations[schedule[sch].day + 1].hour[schedule[sch].start + duration].data.crn = SelectedCourses[code].sections[sec].crn;
+            Durations[schedule[sch].day + 1].hour[schedule[sch].start + duration].data.code = code;
+            Durations[schedule[sch].day + 1].hour[schedule[sch].start + duration].data.color = color; 
+            SelectedColors.push(color);
           }
         }
       }
@@ -113,12 +127,12 @@ const Drawer = observer(({ data, navigation, visibility }) => {
     const crn = item.crn;
     let removedCode;
 
-    for (const code in SelectedCourseList) {
-      for (i = 0; i < SelectedCourseList[code].sections.length; i++) {
-        if (crn === SelectedCourseList[code].sections[i].crn) {
+    for (const code in SelectedCourses) {
+      for (i = 0; i < SelectedCourses[code].sections.length; i++) {
+        if (crn === SelectedCourses[code].sections[i].crn) {
           removedCode = code;
-          SelectedCourseList[code].sections.splice(i, 1);
-          SelectedCourseList[code].types.splice(i, 1);
+          SelectedCourses[code].sections.splice(i, 1);
+          SelectedCourses[code].types.splice(i, 1);
           break;
         }
       }
@@ -126,9 +140,15 @@ const Drawer = observer(({ data, navigation, visibility }) => {
 
     for (i = 1; i < Durations.length; i++) {
       for (j = 0; j < Durations[i].hour.length; j++) {
-        const spaceIndex = Durations[i].hour[j].key.indexOf(' ');
-        if (Durations[i].hour[j].key.slice(0, spaceIndex) === removedCode) {
-          Durations[i].hour[j].key = '';
+        if (Durations[i].hour[j].data.code === removedCode) {
+          const color = Durations[i].hour[j].data.color;
+          const colorIndex = SelectedColors.indexOf(color);
+          SelectedColors.slice(colorIndex, 1);
+
+          Durations[i].hour[j].data.title = '';
+          Durations[i].hour[j].data.code = '';
+          Durations[i].hour[j].data.crn = '';
+          Durations[i].hour[j].data.color = Colors.transparent;
         }
       }
     }
@@ -245,9 +265,9 @@ const Drawer = observer(({ data, navigation, visibility }) => {
   }
 
   const isActive = crn => {
-    for (const code in SelectedCourseList) {
-      for (i = 0; i < SelectedCourseList[code].sections.length; i++) {
-        if (crn === SelectedCourseList[code].sections[i].crn) {
+    for (const code in SelectedCourses) {
+      for (i = 0; i < SelectedCourses[code].sections.length; i++) {
+        if (crn === SelectedCourses[code].sections[i].crn) {
           return true;
         }
       }

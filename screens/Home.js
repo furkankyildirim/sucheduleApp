@@ -10,6 +10,8 @@ import Constants from '../utils/Constants';
 import { observer } from 'mobx-react';
 import Colors from '../utils/Colors';
 import Durations from '../utils/Durations'
+import SelectedCourses from '../utils/SelectedCourses';
+import SelectedColors from '../utils/SelectedColors';
 
 const Home = observer(({ navigation }) => {
 
@@ -27,6 +29,37 @@ const Home = observer(({ navigation }) => {
       setData(JSON.parse(await AsyncStorage.getItem('@data')));
     }
   }));
+
+  const deleteSchedule = data => {
+    const crn = data.crn;
+    let removedCode;
+
+    for (const code in SelectedCourses) {
+      for (i = 0; i < SelectedCourses[code].sections.length; i++) {
+        if (crn === SelectedCourses[code].sections[i].crn) {
+          removedCode = code;
+          SelectedCourses[code].sections.splice(i, 1);
+          SelectedCourses[code].types.splice(i, 1);
+          break;
+        }
+      }
+    }
+
+    for (i = 1; i < Durations.length; i++) {
+      for (j = 0; j < Durations[i].hour.length; j++) {
+        if (Durations[i].hour[j].data.code === removedCode) {
+          const color = Durations[i].hour[j].data.color;
+          const colorIndex = SelectedColors.indexOf(color);
+          SelectedColors.slice(colorIndex, 1);
+
+          Durations[i].hour[j].data.title = '';
+          Durations[i].hour[j].data.code = '';
+          Durations[i].hour[j].data.crn = '';
+          Durations[i].hour[j].data.color = Colors.transparent;
+        }
+      }
+    }
+  }
 
   const setLayout = (event) => {
     setLayoutWidth(event.nativeEvent.layout.width);
@@ -50,9 +83,28 @@ const Home = observer(({ navigation }) => {
       justifyContent: 'center'
     })
 
+    const SelectedCourseStyle = StyleSheet.compose({
+      padding: 5,
+      flexDirection: 'row',
+      justifyContent: 'center',
+      backgroundColor: Durations[item.dayId].hour[index].data.color
+    });
+
     return (
       <View style={GridRowStyle}>
-        <Text style={fontStyles.smallText}>{item.key}</Text>
+
+        {item.dayId === 0
+          ?
+          <Text style={fontStyles.smallText}>{item.data.title}</Text>
+          :
+          Durations[item.dayId].hour[index].data.title !== '' &&
+          <TouchableOpacity style={SelectedCourseStyle}>
+            <Text style={fontStyles.selectedCourse}>{item.data.title}</Text>
+            <TouchableOpacity onPress={() => deleteSchedule(Durations[item.dayId].hour[index].data)}>
+              <Icon name='cross' style={fontStyles.cancelIcon} />
+            </TouchableOpacity>
+          </TouchableOpacity>
+        }
       </View>
     )
   }

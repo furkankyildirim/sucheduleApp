@@ -90,6 +90,16 @@ const fontStyles = StyleSheet.create({
     right:0,
     position:'absolute',
     color: Colors.green
+  },
+  selectedCourse:{
+    fontSize: 15,
+    color: defaultColor,
+    fontWeight: '600',
+  },
+  cancelIcon:{
+    fontSize: 18,
+    marginHorizontal: 2,
+    color: defaultColor,
   }
 })
 

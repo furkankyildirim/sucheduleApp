@@ -9,22 +9,24 @@ import Icon from 'react-native-vector-icons/dist/Entypo';
 import Home from './screens/Home';
 import CourseDetail from './screens/CourseDetail';
 import Durations from './utils/Durations';
-import SelectedCourseList from './utils/SelectedCourseList';
-import { isObservableObject } from 'mobx';
+import SelectedCourses from './utils/SelectedCourses';
 
 LogBox.ignoreAllLogs(true);
 const Stack = createNativeStackNavigator();
 
 const clearAll = () => {
-  const keys = Object.keys(SelectedCourseList);
+  const keys = Object.keys(SelectedCourses);
   for (i = 0; i < keys.length; i++) {
-    delete SelectedCourseList[keys[i]];
+    delete SelectedCourses[keys[i]];
     
   }
   
   for (i = 1; i < Durations.length; i++) {
     for (j = 0; j < Durations[i].hour.length; j++) {
-      Durations[i].hour[j].key = ' ';
+      Durations[i].hour[j].data.title = '';
+      Durations[i].hour[j].data.code = '';
+      Durations[i].hour[j].data.crn = '';
+      Durations[i].hour[j].data.color = Colors.transparent;
     }
   }
 }
