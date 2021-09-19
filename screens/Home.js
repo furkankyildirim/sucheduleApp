@@ -28,7 +28,7 @@ const Home = observer(({ navigation }) => {
     } else {
       setData(JSON.parse(await AsyncStorage.getItem('@data')));
     }
-  }));
+  }),[data]);
 
   const deleteSchedule = item => {
     const crn = item.crn;
