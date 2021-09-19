@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from "@react-native-community/netinfo";
-import Icon from 'react-native-vector-icons/dist/Entypo';
 import axios from 'axios';
+import Icon from 'react-native-vector-icons/dist/Entypo';
 import Drawer from './Drawer'
 import fontStyles from '../utils/FontStyles';
 import Constants from '../utils/Constants';
@@ -30,33 +30,28 @@ const Home = observer(({ navigation }) => {
     }
   }));
 
-  const deleteSchedule = data => {
-    const crn = data.crn;
-    let removedCode;
+  const deleteSchedule = item => {
+    const crn = item.crn;
 
     for (const code in SelectedCourses) {
-      for (i = 0; i < SelectedCourses[code].sections.length; i++) {
-        if (crn === SelectedCourses[code].sections[i].crn) {
-          removedCode = code;
-          SelectedCourses[code].sections.splice(i, 1);
-          SelectedCourses[code].types.splice(i, 1);
-          break;
-        }
-      }
-    }
+      const idx = SelectedCourses[code].sections.map(sec => sec.crn).indexOf(crn);
+      if (idx > -1) {
+        SelectedCourses[code].sections[idx].schedule.map(sch => {
+          for (i = 0; i < sch.duration; i++) {
+            const color = Durations[sch.day + 1].hour[sch.start + i].data.color;
+            const colorIndex = SelectedColors.indexOf(color);
+            SelectedColors.slice(colorIndex, 1);
 
-    for (i = 1; i < Durations.length; i++) {
-      for (j = 0; j < Durations[i].hour.length; j++) {
-        if (Durations[i].hour[j].data.code === removedCode) {
-          const color = Durations[i].hour[j].data.color;
-          const colorIndex = SelectedColors.indexOf(color);
-          SelectedColors.slice(colorIndex, 1);
+            Durations[sch.day + 1].hour[sch.start + i].data.title = '';
+            Durations[sch.day + 1].hour[sch.start + i].data.crn = '';
+            Durations[sch.day + 1].hour[sch.start + i].data.code = '';
+            Durations[sch.day + 1].hour[sch.start + i].data.color = '';
+          }
+        });
 
-          Durations[i].hour[j].data.title = '';
-          Durations[i].hour[j].data.code = '';
-          Durations[i].hour[j].data.crn = '';
-          Durations[i].hour[j].data.color = Colors.transparent;
-        }
+        SelectedCourses[code].types.splice(idx, 1);
+        SelectedCourses[code].sections.splice(idx, 1);
+        return;
       }
     }
   }

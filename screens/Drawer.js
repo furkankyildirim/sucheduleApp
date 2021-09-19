@@ -3,6 +3,9 @@ import { View, Text, Animated, StyleSheet, TextInput, FlatList, TouchableOpacity
 import RNPickerSelect from 'react-native-picker-select';
 import { observer } from 'mobx-react';
 import Icon from 'react-native-vector-icons/dist/FontAwesome';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import NetInfo from "@react-native-community/netinfo";
+import axios from 'axios';
 import Colors from '../utils/Colors';
 import Constants from '../utils/Constants';
 import Durations from '../utils/Durations';
@@ -36,17 +39,12 @@ const Drawer = observer(({ data, navigation, visibility }) => {
     let durationController = false;
     const code = course.code
     const type = course.sections[0].type;
-    const crn = course.sections[0].crn;
 
     if (code in SelectedCourses) {
       if (SelectedCourses[code].types.includes(type)) {
-        for (l = 0; l < SelectedCourses[code].sections.length; l++) {
-          if (type === SelectedCourses[code].sections[l].type && crn
-            !== SelectedCourses[code].sections[l].crn) {
-            SelectedCourses[code].sections[l] = course.sections[0];
-            durationController = true;
-          }
-        }
+        const idx = SelectedCourses[code].types.indexOf(type);
+        SelectedCourses[code].sections[idx] = course.sections[0];
+        durationController = true;
       } else {
         SelectedCourses[code].types.push(type);
         SelectedCourses[code].sections.push(course.sections[0]);
@@ -59,53 +57,54 @@ const Drawer = observer(({ data, navigation, visibility }) => {
     }
 
     if (SelectedCourses[code].types.length === SelectedCourses[code].typeLenght && durationController) {
-      for (d = 1; d < Durations.length; d++) {
-        for (e = 0; e < Durations[d].hour.length; e++) {
-          if (Durations[d].hour[e].data.code === code) {
-            const color = Durations[d].hour[e].data.color;
-            const colorIndex = SelectedColors.indexOf(color);
-            SelectedColors.slice(colorIndex, 1);
+      Durations.map(day => day.hour.map(hour => {
+        if (hour.data.code === code) {
+          const color = hour.data.color;
+          const colorIndex = SelectedColors.indexOf(color);
+          SelectedColors.slice(colorIndex, 1);
 
-            Durations[d].hour[e].data.title = '';
-            Durations[d].hour[e].data.code = '';
-            Durations[d].hour[e].data.crn = '';
-            Durations[i].hour[j].data.color = Colors.transparent;
-          }
+          hour.data.title = '';
+          hour.data.code = '';
+          hour.data.crn = '';
+          hour.data.color = '';
         }
+      }))
+
+      let color = Colors.colorPalette[Math.floor(Math.random() * Colors.colorPalette.length)];
+      while (SelectedColors.includes(color)) {
+        color = Colors.colorPalette[Math.floor(Math.random() * Colors.colorPalette.length)];
       }
 
-      let color = Colors.colorPalette[Math.floor(Math.random()*Colors.colorPalette.length)];
-      while(SelectedColors.includes(color)){
-        color = Colors.colorPalette[Math.floor(Math.random()*Colors.colorPalette.length)];
-      }
+      SelectedCourses[code].sections.map(section => {
+        const lessonName = section.lessonName;
+        const crn = section.crn;
 
-      for (sec = 0; sec < SelectedCourses[code].sections.length; sec++) {
-        const schedule = SelectedCourses[code].sections[sec].schedule;
-        for (sch = 0; sch < schedule.length; sch++) {
-          for (duration = 0; duration < schedule[sch].duration; duration++) {
-            Durations[schedule[sch].day + 1].hour[schedule[sch].start + duration].data.title = SelectedCourses[code].sections[sec].lessonName;
-            Durations[schedule[sch].day + 1].hour[schedule[sch].start + duration].data.crn = SelectedCourses[code].sections[sec].crn;
-            Durations[schedule[sch].day + 1].hour[schedule[sch].start + duration].data.code = code;
-            Durations[schedule[sch].day + 1].hour[schedule[sch].start + duration].data.color = color; 
-            SelectedColors.push(color);
+        section.schedule.map(sch =>       {
+          for (i = 0; i < sch.duration; i++) {
+
+            Durations[sch.day + 1].hour[sch.start + i].data.title = lessonName;
+            Durations[sch.day + 1].hour[sch.start + i].data.crn = crn;
+            Durations[sch.day + 1].hour[sch.start + i].data.code = code;
+            Durations[sch.day + 1].hour[sch.start + i].data.color = color;
           }
-        }
-      }
+        })
+      });
     }
   }
 
   const setSchedule = item => {
-    for (i = 0; i < data.courses.length; i++) {
-      const code = data.courses[i].code.replace(/\s/g, '');
-      for (j = 0; j < data.courses[i].classes.length; j++) {
-        const type = data.courses[i].classes[j].type;
-        for (k = 0; k < data.courses[i].classes[j].sections.length; k++) {
-          const crn = data.courses[i].classes[j].sections[k].crn;
-          const group = data.courses[i].classes[j].sections[k].group;
+    data.courses.map(course => {
+      const code = course.code.replace(/\s/g, '');
+      const clsLenght = course.classes.length;
+      course.classes.map(cls => {
+        const type = cls.type;
+        cls.sections.map(sec => {
+          const crn = sec.crn;
+          const group = sec.group;
           if (crn === item.crn) {
             const lessonName = code + type + ' - ' + group;
-            const schedule = data.courses[i].classes[j].sections[k].schedule;
-            selectedCourse = {
+            const schedule = sec.schedule;
+            const selectedCourse = {
               sections: [{
                 type: type,
                 crn: crn,
@@ -113,43 +112,39 @@ const Drawer = observer(({ data, navigation, visibility }) => {
                 lessonName: lessonName,
               }],
               code: code,
-              typeLenght: data.courses[i].classes.length,
+              typeLenght: clsLenght,
               types: []
             }
             setSelectedCourse(selectedCourse);
+            return;
           }
-        }
-      }
-    }
+        });
+      });
+    });
   }
 
   const deleteSchedule = item => {
     const crn = item.crn;
-    let removedCode;
 
     for (const code in SelectedCourses) {
-      for (i = 0; i < SelectedCourses[code].sections.length; i++) {
-        if (crn === SelectedCourses[code].sections[i].crn) {
-          removedCode = code;
-          SelectedCourses[code].sections.splice(i, 1);
-          SelectedCourses[code].types.splice(i, 1);
-          break;
-        }
-      }
-    }
+      const idx = SelectedCourses[code].sections.map(sec => sec.crn).indexOf(crn);
+      if (idx > -1) {
+        SelectedCourses[code].sections[idx].schedule.map(sch => {
+          for (i = 0; i < sch.duration; i++) {
+            const color = Durations[sch.day + 1].hour[sch.start + i].data.color;
+            const colorIndex = SelectedColors.indexOf(color);
+            SelectedColors.slice(colorIndex, 1);
 
-    for (i = 1; i < Durations.length; i++) {
-      for (j = 0; j < Durations[i].hour.length; j++) {
-        if (Durations[i].hour[j].data.code === removedCode) {
-          const color = Durations[i].hour[j].data.color;
-          const colorIndex = SelectedColors.indexOf(color);
-          SelectedColors.slice(colorIndex, 1);
+            Durations[sch.day + 1].hour[sch.start + i].data.title = '';
+            Durations[sch.day + 1].hour[sch.start + i].data.crn = '';
+            Durations[sch.day + 1].hour[sch.start + i].data.code = '';
+            Durations[sch.day + 1].hour[sch.start + i].data.color = '';
+          }
+        });
 
-          Durations[i].hour[j].data.title = '';
-          Durations[i].hour[j].data.code = '';
-          Durations[i].hour[j].data.crn = '';
-          Durations[i].hour[j].data.color = Colors.transparent;
-        }
+        SelectedCourses[code].types.splice(idx, 1);
+        SelectedCourses[code].sections.splice(idx, 1);
+        return;
       }
     }
   }
@@ -266,10 +261,8 @@ const Drawer = observer(({ data, navigation, visibility }) => {
 
   const isActive = crn => {
     for (const code in SelectedCourses) {
-      for (i = 0; i < SelectedCourses[code].sections.length; i++) {
-        if (crn === SelectedCourses[code].sections[i].crn) {
-          return true;
-        }
+      if (SelectedCourses[code].sections.map(item => item.crn).indexOf(crn) > -1) {
+        return true;
       }
     }
 
