@@ -1,17 +1,15 @@
 import React, { useState, useRef } from 'react';
 import { View, Text, Animated, StyleSheet, TextInput, FlatList, TouchableOpacity, useColorScheme } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
-import { observer } from 'mobx-react';
+import { observer, Observer } from 'mobx-react';
 import Icon from 'react-native-vector-icons/dist/FontAwesome';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import NetInfo from "@react-native-community/netinfo";
-import axios from 'axios';
 import Colors from '../utils/Colors';
 import Constants from '../utils/Constants';
 import Durations from '../utils/Durations';
 import fontStyles from '../utils/FontStyles';
 import SelectedCourses from '../utils/SelectedCourses';
 import SelectedColors from '../utils/SelectedColors';
+import { action } from 'mobx';
 
 const Drawer = observer(({ data, navigation, visibility }) => {
 
@@ -79,7 +77,7 @@ const Drawer = observer(({ data, navigation, visibility }) => {
         const lessonName = section.lessonName;
         const crn = section.crn;
 
-        section.schedule.map(sch =>       {
+        section.schedule.map(sch => {
           for (i = 0; i < sch.duration; i++) {
 
             Durations[sch.day + 1].hour[sch.start + i].data.title = lessonName;
@@ -300,37 +298,39 @@ const Drawer = observer(({ data, navigation, visibility }) => {
     })
 
     return (
-      <TouchableOpacity style={CourseSectionStyle} onPress={() => !isActive(item.crn) ? setSchedule(item) : deleteSchedule(item)}>
-        <View style={{ flex: 3 }}>
-          <TouchableOpacity style={InfoButtonStyle}
-            onPress={() => navigation.push('CourseDetail', { url: data.infoLink + item.crn })}>
-            <View style={GroupStyle}>
-              <Text style={fontStyles.groupTitle}>{item.group}</Text>
-            </View>
-            <View style={InfoStyle}>
-              <Text style={fontStyles.infoTitle}>info</Text>
-            </View>
-            <Icon name='external-link-square' style={fontStyles.linkIcon} />
-          </TouchableOpacity>
+      <Observer>
+        {() => <TouchableOpacity style={CourseSectionStyle} onPress={action(() => !isActive(item.crn) ? setSchedule(item) : deleteSchedule(item))}>
+          <View style={{ flex: 3 }}>
+            <TouchableOpacity style={InfoButtonStyle}
+              onPress={() => navigation.push('CourseDetail', { url: data.infoLink + item.crn })}>
+              <View style={GroupStyle}>
+                <Text style={fontStyles.groupTitle}>{item.group}</Text>
+              </View>
+              <View style={InfoStyle}>
+                <Text style={fontStyles.infoTitle}>info</Text>
+              </View>
+              <Icon name='external-link-square' style={fontStyles.linkIcon} />
+            </TouchableOpacity>
 
-          <View style={{ paddingVertical: 5 }}>
-            <Text style={fontStyles.instructorTitle}>{data.instructors[item.instructors]}</Text>
+            <View style={{ paddingVertical: 5 }}>
+              <Text style={fontStyles.instructorTitle}>{data.instructors[item.instructors]}</Text>
+            </View>
+
+            <FlatList
+              scrollEnabled={false}
+              renderItem={CourseSchedule}
+              data={item.schedule}
+              key={item => item.key}
+            />
           </View>
 
-          <FlatList
-            scrollEnabled={false}
-            renderItem={CourseSchedule}
-            data={item.schedule}
-            key={item => item.key}
-          />
-        </View>
-
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <View style={{ width: 30, height: 30, borderWidth: 0.75, alignItems: 'center', justifyContent: 'center' }}>
-            {isActive(item.crn) && <Icon name='check' style={fontStyles.checkIcon} />}
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+            <View style={{ width: 30, height: 30, borderWidth: 0.75, alignItems: 'center', justifyContent: 'center' }}>
+              {isActive(item.crn) && <Icon name='check' style={fontStyles.checkIcon} />}
+            </View>
           </View>
-        </View>
-      </TouchableOpacity>
+        </TouchableOpacity>}
+      </Observer>
     );
   }
 
@@ -468,7 +468,7 @@ const Drawer = observer(({ data, navigation, visibility }) => {
           placeholder='Search For...'
           placeholderTextColor={Colors.black2}
           onChangeText={text => {
-            for (let i = 0; i < data.courses.length; i++) {
+            for (let i = 0; i < useOpen.length; i++) {
               useOpen[i][1](false);
             }
             setSearchText(text)
@@ -477,7 +477,7 @@ const Drawer = observer(({ data, navigation, visibility }) => {
         <RNPickerSelect
           value={searchType}
           onValueChange={value => {
-            for (let i = 0; i < data.courses.length; i++) {
+            for (let i = 0; i < useOpen.length; i++) {
               useOpen[i][1](false);
             };
             setSearchType(value)

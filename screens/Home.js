@@ -7,11 +7,12 @@ import Icon from 'react-native-vector-icons/dist/Entypo';
 import Drawer from './Drawer'
 import fontStyles from '../utils/FontStyles';
 import Constants from '../utils/Constants';
-import { observer } from 'mobx-react';
+import { Observer, observer } from 'mobx-react';
 import Colors from '../utils/Colors';
 import Durations from '../utils/Durations'
 import SelectedCourses from '../utils/SelectedCourses';
 import SelectedColors from '../utils/SelectedColors';
+import { action } from 'mobx';
 
 const Home = observer(({ navigation }) => {
 
@@ -28,7 +29,7 @@ const Home = observer(({ navigation }) => {
     } else {
       setData(JSON.parse(await AsyncStorage.getItem('@data')));
     }
-  }),[data]);
+  }), []);
 
   const deleteSchedule = item => {
     const crn = item.crn;
@@ -86,21 +87,22 @@ const Home = observer(({ navigation }) => {
     });
 
     return (
-      <View style={GridRowStyle}>
-
-        {item.dayId === 0
-          ?
-          <Text style={fontStyles.smallText}>{item.data.title}</Text>
-          :
-          Durations[item.dayId].hour[index].data.title !== '' &&
-          <TouchableOpacity style={SelectedCourseStyle}>
-            <Text style={fontStyles.selectedCourse}>{item.data.title}</Text>
-            <TouchableOpacity onPress={() => deleteSchedule(Durations[item.dayId].hour[index].data)}>
-              <Icon name='cross' style={fontStyles.cancelIcon} />
+      <Observer>
+        {() => <View style={GridRowStyle}>
+          {item.dayId === 0
+            ?
+            <Text style={fontStyles.smallText}>{item.data.title}</Text>
+            :
+            Durations[item.dayId].hour[index].data.title !== '' &&
+            <TouchableOpacity style={{ ...SelectedCourseStyle, backgroundColor: Durations[item.dayId].hour[index].data.color }}>
+              <Text style={fontStyles.selectedCourse}>{item.data.title}</Text>
+              <TouchableOpacity onPress={action(() => deleteSchedule(Durations[item.dayId].hour[index].data))}>
+                <Icon name='cross' style={fontStyles.cancelIcon} />
+              </TouchableOpacity>
             </TouchableOpacity>
-          </TouchableOpacity>
-        }
-      </View>
+          }
+        </View>}
+      </Observer>
     )
   }
 
