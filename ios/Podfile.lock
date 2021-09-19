@@ -352,6 +352,8 @@ PODS:
     - React-Core
   - RNCAsyncStorage (1.15.8):
     - React-Core
+  - RNCClipboard (1.8.4):
+    - React-Core
   - RNCPicker (2.1.0):
     - React-Core
   - RNFastImage (8.5.5):
@@ -460,6 +462,7 @@ DEPENDENCIES:
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - ReactNativeLocalization (from `../node_modules/react-native-localization`)
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
+  - "RNCClipboard (from `../node_modules/@react-native-clipboard/clipboard`)"
   - "RNCPicker (from `../node_modules/@react-native-picker/picker`)"
   - RNFastImage (from `../node_modules/react-native-fast-image`)
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
@@ -554,6 +557,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-localization"
   RNCAsyncStorage:
     :path: "../node_modules/@react-native-async-storage/async-storage"
+  RNCClipboard:
+    :path: "../node_modules/@react-native-clipboard/clipboard"
   RNCPicker:
     :path: "../node_modules/@react-native-picker/picker"
   RNFastImage:
@@ -617,6 +622,7 @@ SPEC CHECKSUMS:
   ReactCommon: eafed38eec7b591c31751bfa7494801618460459
   ReactNativeLocalization: 90a1181b7672309701dd7e5364fbf587319d41c6
   RNCAsyncStorage: e8b8d6320a0dd90eb610fb0d0b1ef90596697c69
+  RNCClipboard: ddd4d291537f1667209c9c405aaa4307297e252e
   RNCPicker: f7a40b21b915b7a187624d52f52b7bc2f73ea413
   RNFastImage: a68c2ad0cc3f7fdacf8dc4e3dbdba2aaadc312b6
   RNGestureHandler: a479ebd5ed4221a810967000735517df0d2db211

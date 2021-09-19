@@ -1,6 +1,7 @@
 import React from 'react';
 import { LogBox, View, Text, TouchableOpacity } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import Clipboard from '@react-native-clipboard/clipboard';
 import { NavigationContainer } from '@react-navigation/native';
 import { observer } from 'mobx-react';
 import Colors from './utils/Colors';
@@ -10,6 +11,7 @@ import Home from './screens/Home';
 import CourseDetail from './screens/CourseDetail';
 import Durations from './utils/Durations';
 import SelectedCourses from './utils/SelectedCourses';
+import { action } from 'mobx';
 
 LogBox.ignoreAllLogs(true);
 const Stack = createNativeStackNavigator();
@@ -18,9 +20,9 @@ const clearAll = () => {
   const keys = Object.keys(SelectedCourses);
   for (i = 0; i < keys.length; i++) {
     delete SelectedCourses[keys[i]];
-    
+
   }
-  
+
   for (i = 1; i < Durations.length; i++) {
     for (j = 0; j < Durations[i].hour.length; j++) {
       Durations[i].hour[j].data.title = '';
@@ -29,6 +31,19 @@ const clearAll = () => {
       Durations[i].hour[j].data.color = Colors.transparent;
     }
   }
+}
+
+const copyCourses = () => {
+  let copiedText = '';
+  for (const code in SelectedCourses) {
+    SelectedCourses[code].sections.map(section => {
+
+      const lessonName = section.lessonName;
+      const crn = section.crn;
+      copiedText = copiedText + lessonName + ': ' + crn + '\n';
+    })
+  }
+  Clipboard.setString(copiedText);
 }
 
 const HeaderLeft = () => {
@@ -53,8 +68,8 @@ const HeaderButton = observer(({ button, operation }) => {
 const HeaderRight = () => {
   return (
     <View style={{ flexDirection: 'row' }}>
-      <HeaderButton button="trash" operation={() => clearAll()} />
-      <HeaderButton button="clipboard" operation={() => { }} />
+      <HeaderButton button="trash" operation={action(() => clearAll())} />
+      <HeaderButton button="clipboard" operation={() => copyCourses()} />
       <HeaderButton button="calendar" operation={() => { }} />
     </View>
   );
