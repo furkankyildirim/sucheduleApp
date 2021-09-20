@@ -85,7 +85,7 @@ const Home = observer(({ navigation }) => {
     for (const code in SelectedCourses) {
       const idx = SelectedCourses[code].sections.map(sec => sec.crn).indexOf(crn);
       if (idx > -1) {
-        SelectedCourses[code].sections[idx].schedule.map(sch => {
+        SelectedCourses[code].sections.map(sec => sec.schedule.map(sch => {
           for (i = 0; i < sch.duration; i++) {
             const color = Durations[sch.day + 1].hour[sch.start + i].data.color;
             const colorIndex = SelectedColors.indexOf(color);
@@ -96,7 +96,7 @@ const Home = observer(({ navigation }) => {
             Durations[sch.day + 1].hour[sch.start + i].data.code = '';
             Durations[sch.day + 1].hour[sch.start + i].data.color = '';
           }
-        });
+        }));
 
         SelectedCourses[code].types.splice(idx, 1);
         SelectedCourses[code].sections.splice(idx, 1);
