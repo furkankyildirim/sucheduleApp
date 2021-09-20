@@ -10,6 +10,7 @@ import Durations from '../utils/Durations';
 import fontStyles from '../utils/FontStyles';
 import SelectedCourses from '../utils/SelectedCourses';
 import SelectedColors from '../utils/SelectedColors';
+import PressedCourses from '../utils/PressedCourses';
 import { action } from 'mobx';
 
 const Drawer = observer(({ data, navigation, visibility }) => {
@@ -152,30 +153,31 @@ const Drawer = observer(({ data, navigation, visibility }) => {
 
   const filterData = () => {
     let filteredData = [];
+    const tempData = PressedCourses.isPressed ? PressedCourses.data : data.courses;
 
-    for (i = 0; i < data.courses.length; i++) {
-      const course = { classes: [], code: data.courses[i].code, name: data.courses[i].name };
-      for (j = 0; j < data.courses[i].classes.length; j++) {
-        const cls = { sections: [], type: data.courses[i].classes[j].type }
-        for (k = 0; k < data.courses[i].classes[j].sections.length; k++) {
+    for (i = 0; i < tempData.length; i++) {
+      const course = { classes: [], code: tempData[i].code, name: tempData[i].name };
+      for (j = 0; j < tempData[i].classes.length; j++) {
+        const cls = { sections: [], type: tempData[i].classes[j].type }
+        for (k = 0; k < tempData[i].classes[j].sections.length; k++) {
           const section = {
-            crn: data.courses[i].classes[j].sections[k].crn,
-            group: data.courses[i].classes[j].sections[k].group,
-            instructors: data.courses[i].classes[j].sections[k].instructors,
+            crn: tempData[i].classes[j].sections[k].crn,
+            group: tempData[i].classes[j].sections[k].group,
+            instructors: tempData[i].classes[j].sections[k].instructors,
             schedule: []
           }
-          for (l = 0; l < data.courses[i].classes[j].sections[k].schedule.length; l++) {
-            if (activeDays[data.courses[i].classes[j].sections[k].schedule[l].day][0]) {
+          for (l = 0; l < tempData[i].classes[j].sections[k].schedule.length; l++) {
+            if (activeDays[tempData[i].classes[j].sections[k].schedule[l].day][0]) {
               const schedule = {
-                day: data.courses[i].classes[j].sections[k].schedule[l].day,
-                duration: data.courses[i].classes[j].sections[k].schedule[l].duration,
-                place: data.courses[i].classes[j].sections[k].schedule[l].place,
-                start: data.courses[i].classes[j].sections[k].schedule[l].start
+                day: tempData[i].classes[j].sections[k].schedule[l].day,
+                duration: tempData[i].classes[j].sections[k].schedule[l].duration,
+                place: tempData[i].classes[j].sections[k].schedule[l].place,
+                start: tempData[i].classes[j].sections[k].schedule[l].start
               }
               section.schedule.push(schedule);
             }
           }
-          section.schedule.length == data.courses[i].classes[j].sections[k].schedule.length
+          section.schedule.length == tempData[i].classes[j].sections[k].schedule.length
             ? cls.sections.push(section) : null;
         }
         cls.sections.length > 0 ? course.classes.push(cls) : null;
@@ -244,6 +246,15 @@ const Drawer = observer(({ data, navigation, visibility }) => {
     } else useOpen[index][1](false);
   }
 
+  const setPressedCourse = code => {
+    const idx = PressedCourses.data.map(crs => crs.code).indexOf(code);
+    PressedCourses.data.slice(idx, 1);
+    PressedCourses.isPressed = false;
+
+    for (let i = 0; i < useOpen.length; i++) {
+      useOpen[i][1](false);
+    }
+  }
 
   const CourseClass = ({ item, index }) => {
     return (
@@ -371,12 +382,28 @@ const Drawer = observer(({ data, navigation, visibility }) => {
       alignItems: 'center',
     })
 
+    const CloseButtonStyle = StyleSheet.compose({
+      justifyContent: 'center',
+      position: 'absolute',
+      right: 0
+    });
+
     return (
       <View style={CourseContainerStyle}>
-        <TouchableOpacity style={CourseHeaderStyle} onPress={() => openCourse(index)}>
-          <Text numberOfLines={1} style={fontStyles.courseTitle}>{item.code} - {item.name}</Text>
-          <Icon name={useOpen[index][0] ? 'angle-down' : 'angle-right'} style={fontStyles.courseIcon} />
-        </TouchableOpacity>
+        {!PressedCourses.isPressed
+          ?
+          <TouchableOpacity style={CourseHeaderStyle} onPress={() => openCourse(index)}>
+            <Text numberOfLines={1} style={fontStyles.courseTitle}>{item.code} - {item.name}</Text>
+            <Icon name={useOpen[index][0] ? 'angle-down' : 'angle-right'} style={fontStyles.courseIcon} />
+          </TouchableOpacity>
+          :
+          <TouchableOpacity style={CourseHeaderStyle} onPress={action(() => openCourse(index))}>
+            <Text numberOfLines={1} style={fontStyles.courseTitle}>{item.code} - {item.name}</Text>
+            <TouchableOpacity style={CloseButtonStyle} onPress={action(() => setPressedCourse(item.code))}>
+              <Icon name={'close'} style={{ ...fontStyles.courseIcon, fontSize: 15 }} />
+            </TouchableOpacity>
+          </TouchableOpacity>
+        }
 
         {useOpen[index][0]
           ? <FlatList

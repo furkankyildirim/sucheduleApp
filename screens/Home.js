@@ -12,6 +12,7 @@ import Colors from '../utils/Colors';
 import Durations from '../utils/Durations'
 import SelectedCourses from '../utils/SelectedCourses';
 import SelectedColors from '../utils/SelectedColors';
+import PressedCourses from '../utils/PressedCourses';
 import { action } from 'mobx';
 
 const Home = observer(({ navigation }) => {
@@ -19,6 +20,7 @@ const Home = observer(({ navigation }) => {
   const [layoutWidth, setLayoutWidth] = useState(0);
   const [layoutHeight, setLayoutHeight] = useState(0);
   const [drawerVisibility, setDrawerVisibility] = useState(false);
+  const [isPressed, setIsPressed] = useState(false); 
   const [data, setData] = useState(null);
 
   useEffect(() => NetInfo.fetch().then(async state => {
@@ -106,6 +108,43 @@ const Home = observer(({ navigation }) => {
     }
   }
 
+  const setPressedCourses = crn => {
+
+    for (i = 0; i < data.courses.length; i++) {
+      const course = { classes: [], code: data.courses[i].code, name: data.courses[i].name };
+      const CRNs = [];
+      for (j = 0; j < data.courses[i].classes.length; j++) {
+        const cls = { sections: [], type: data.courses[i].classes[j].type };
+        for (k = 0; k < data.courses[i].classes[j].sections.length; k++) {
+          const section = {
+            crn: data.courses[i].classes[j].sections[k].crn,
+            group: data.courses[i].classes[j].sections[k].group,
+            instructors: data.courses[i].classes[j].sections[k].instructors,
+            schedule: []
+          }
+          CRNs.push(section.crn);
+
+          for (l = 0; l < data.courses[i].classes[j].sections[k].schedule.length; l++) {
+            const schedule = {
+              day: data.courses[i].classes[j].sections[k].schedule[l].day,
+              duration: data.courses[i].classes[j].sections[k].schedule[l].duration,
+              place: data.courses[i].classes[j].sections[k].schedule[l].place,
+              start: data.courses[i].classes[j].sections[k].schedule[l].start
+            }
+            section.schedule.push(schedule);
+          }
+          cls.sections.push(section);
+        }
+        course.classes.push(cls);
+      }
+      if (CRNs.includes(crn) && !PressedCourses.data.map(crs => crs.code).includes(course.code)) {
+        PressedCourses.data.push(course);
+      }
+    }
+    PressedCourses.isPressed = true;
+    setDrawerVisibility(true);
+  }
+
   const setLayout = (event) => {
     setLayoutWidth(event.nativeEvent.layout.width);
     setLayoutHeight(event.nativeEvent.layout.height);
@@ -143,7 +182,8 @@ const Home = observer(({ navigation }) => {
             <Text style={fontStyles.smallText}>{item.data.title}</Text>
             :
             Durations[item.dayId].hour[index].data.title !== '' &&
-            <TouchableOpacity style={{ ...SelectedCourseStyle, backgroundColor: Durations[item.dayId].hour[index].data.color }}>
+            <TouchableOpacity onPress={action(() => setPressedCourses(Durations[item.dayId].hour[index].data.crn))}
+              style={{ ...SelectedCourseStyle, backgroundColor: Durations[item.dayId].hour[index].data.color }}>
               <Text style={fontStyles.selectedCourse}>{item.data.title}</Text>
               <TouchableOpacity onPress={action(() => deleteSchedule(Durations[item.dayId].hour[index].data))}>
                 <Icon name='cross' style={fontStyles.cancelIcon} />
