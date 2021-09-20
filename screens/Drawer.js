@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { View, Text, Animated, StyleSheet, TextInput, FlatList, TouchableOpacity, useColorScheme } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import RNPickerSelect from 'react-native-picker-select';
 import { observer, Observer } from 'mobx-react';
 import Icon from 'react-native-vector-icons/dist/FontAwesome';
@@ -32,7 +33,7 @@ const Drawer = observer(({ data, navigation, visibility }) => {
     activeDays.push([active, setActive]);
   }
 
-  const setSelectedCourse = course => {
+  const setSelectedCourse = async course => {
 
     let durationController = false;
     const code = course.code
@@ -88,6 +89,7 @@ const Drawer = observer(({ data, navigation, visibility }) => {
         })
       });
     }
+    await AsyncStorage.setItem('@session', JSON.stringify(SelectedCourses));
   }
 
   const setSchedule = item => {
@@ -121,7 +123,7 @@ const Drawer = observer(({ data, navigation, visibility }) => {
     });
   }
 
-  const deleteSchedule = item => {
+  const deleteSchedule = async item => {
     const crn = item.crn;
 
     for (const code in SelectedCourses) {
@@ -142,6 +144,7 @@ const Drawer = observer(({ data, navigation, visibility }) => {
 
         SelectedCourses[code].types.splice(idx, 1);
         SelectedCourses[code].sections.splice(idx, 1);
+        await AsyncStorage.setItem('@session', JSON.stringify(SelectedCourses));
         return;
       }
     }

@@ -1,5 +1,6 @@
 import React from 'react';
 import { LogBox, View, Text, TouchableOpacity } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Clipboard from '@react-native-clipboard/clipboard';
 import { NavigationContainer } from '@react-navigation/native';
@@ -22,6 +23,8 @@ const clearAll = () => {
     delete SelectedCourses[keys[i]];
 
   }
+
+  AsyncStorage.setItem('@session', JSON.stringify(SelectedCourses));
 
   for (i = 1; i < Durations.length; i++) {
     for (j = 0; j < Durations[i].hour.length; j++) {

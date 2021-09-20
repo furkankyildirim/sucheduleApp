@@ -24,14 +24,62 @@ const Home = observer(({ navigation }) => {
   useEffect(() => NetInfo.fetch().then(async state => {
     if (state.isConnected) {
       const response = await axios.get('http://46.235.14.53:5000/suchedule/data');
-      setData(response.data);
+
+      if (await AsyncStorage.getItem('@version') !== response.data.version.toString()) {
+        await AsyncStorage.clear();
+        await AsyncStorage.setItem('@version', response.data.version.toString());
+      }
+
       AsyncStorage.setItem('@data', JSON.stringify(response.data));
-    } else {
-      setData(JSON.parse(await AsyncStorage.getItem('@data')));
+    }
+
+    setData(JSON.parse(await AsyncStorage.getItem('@data')));
+
+    const sessionValue = await AsyncStorage.getItem('@session');
+    const Session = sessionValue != null ? JSON.parse(sessionValue) : {};
+
+
+    for (const code in Session) {
+      SelectedCourses[code] = Session[code];
+      if (SelectedCourses[code].types.length === SelectedCourses[code].typeLenght) {
+        Durations.map(day => day.hour.map(hour => {
+          if (hour.data.code === code) {
+            const color = hour.data.color;
+            const colorIndex = SelectedColors.indexOf(color);
+            SelectedColors.slice(colorIndex, 1);
+
+            hour.data.title = '';
+            hour.data.code = '';
+            hour.data.crn = '';
+            hour.data.color = '';
+          }
+        }))
+
+        let color = Colors.colorPalette[Math.floor(Math.random() * Colors.colorPalette.length)];
+        while (SelectedColors.includes(color)) {
+          color = Colors.colorPalette[Math.floor(Math.random() * Colors.colorPalette.length)];
+        }
+
+        SelectedCourses[code].sections.map(section => {
+          const lessonName = section.lessonName;
+          const crn = section.crn;
+
+          section.schedule.map(sch => {
+            for (i = 0; i < sch.duration; i++) {
+
+              Durations[sch.day + 1].hour[sch.start + i].data.title = lessonName;
+              Durations[sch.day + 1].hour[sch.start + i].data.crn = crn;
+              Durations[sch.day + 1].hour[sch.start + i].data.code = code;
+              Durations[sch.day + 1].hour[sch.start + i].data.color = color;
+            }
+          })
+        });
+      }
     }
   }), []);
 
-  const deleteSchedule = item => {
+
+  const deleteSchedule = async item => {
     const crn = item.crn;
 
     for (const code in SelectedCourses) {
@@ -52,6 +100,7 @@ const Home = observer(({ navigation }) => {
 
         SelectedCourses[code].types.splice(idx, 1);
         SelectedCourses[code].sections.splice(idx, 1);
+        await AsyncStorage.setItem('@session', JSON.stringify(SelectedCourses));
         return;
       }
     }
