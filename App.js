@@ -1,6 +1,7 @@
 import React from 'react';
 import { LogBox, View, Text, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import RNCalendarEvents from "react-native-calendar-events";
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Clipboard from '@react-native-clipboard/clipboard';
 import { NavigationContainer } from '@react-navigation/native';
@@ -13,6 +14,8 @@ import CourseDetail from './screens/CourseDetail';
 import Durations from './utils/Durations';
 import SelectedCourses from './utils/SelectedCourses';
 import { action } from 'mobx';
+import axios from 'axios';
+import Constants from './utils/Constants';
 
 LogBox.ignoreAllLogs(true);
 const Stack = createNativeStackNavigator();
@@ -49,6 +52,57 @@ const copyCourses = () => {
   Clipboard.setString(copiedText);
 }
 
+const saveCalendar = async () => {
+  await RNCalendarEvents.requestPermissions((readOnly = false));
+
+  const calendars = await RNCalendarEvents.findCalendars();
+  const idx = calendars.map(calendar => calendar.title).indexOf('SUchedule');
+
+  if (idx > -1) {
+    await RNCalendarEvents.removeCalendar(calendars[idx].id);
+  }
+
+  const calendarId = await RNCalendarEvents.saveCalendar({
+    title: 'SUchedule',
+    name: 'SUchedule',
+    color: Colors.blue1,
+    entityType: 'event',
+    accessLevel: 'root',
+    source: {
+      isLocalAccount: true,
+      name: 'SUchedule'
+    }
+  });
+
+  const appInfo = await (await axios.get('http://46.235.14.53:5000/')).data;
+  const lastDate = new Date(appInfo['end-date']);
+
+  for (const code in SelectedCourses) {
+    SelectedCourses[code].sections
+      .map(section => section.schedule.map(sch => {
+        const startDate = new Date(appInfo['start-date']);
+        startDate.setDate(startDate.getDate() + sch.day);
+        startDate.setHours(8 + sch.start);
+        startDate.setMinutes(40);
+
+        const endDate = new Date(startDate)
+        endDate.setHours(8 + sch.start + sch.duration);
+        endDate.setMinutes(30);
+
+        RNCalendarEvents.saveEvent(section.lessonName, {
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+          calendarId: calendarId,
+          recurrenceRule: {
+            frequency: 'weekly',
+            endDate: lastDate.toISOString()
+          },
+          location: sch.location,
+        })
+      }));
+  }
+}
+
 const HeaderLeft = () => {
   return (
     <View>
@@ -73,7 +127,7 @@ const HeaderRight = () => {
     <View style={{ flexDirection: 'row' }}>
       <HeaderButton button="trash" operation={action(() => clearAll())} />
       <HeaderButton button="clipboard" operation={() => copyCourses()} />
-      <HeaderButton button="calendar" operation={() => { }} />
+      <HeaderButton button="calendar" operation={() => saveCalendar()} />
     </View>
   );
 }

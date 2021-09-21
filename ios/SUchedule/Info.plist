@@ -82,5 +82,7 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>NSCalendarsUsageDescription</key>
+	<string>This app requires access to the calendar to append the course schedules.</string>
 </dict>
 </plist>

@@ -105,6 +105,11 @@ const Drawer = observer(({ data, navigation, visibility }) => {
           if (crn === item.crn) {
             const lessonName = code + type + ' - ' + group;
             const schedule = sec.schedule;
+
+            for (i = 0; i < schedule.length; i++) {
+              schedule[i]['location'] = data.places[schedule[i].place]
+            }
+
             const selectedCourse = {
               sections: [{
                 type: type,
