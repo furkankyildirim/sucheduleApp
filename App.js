@@ -15,7 +15,8 @@ import Durations from './utils/Durations';
 import SelectedCourses from './utils/SelectedCourses';
 import { action } from 'mobx';
 import axios from 'axios';
-import Constants from './utils/Constants';
+import NetInfo from '@react-native-community/netinfo';
+import Toast from 'react-native-tiny-toast'
 
 LogBox.ignoreAllLogs(true);
 const Stack = createNativeStackNavigator();
@@ -37,6 +38,7 @@ const clearAll = () => {
       Durations[i].hour[j].data.color = Colors.transparent;
     }
   }
+  Toast.show("Deleted All Courses");
 }
 
 const copyCourses = () => {
@@ -50,6 +52,7 @@ const copyCourses = () => {
     })
   }
   Clipboard.setString(copiedText);
+  Toast.show("Copied to Clipboard");
 }
 
 const saveCalendar = async () => {
@@ -74,13 +77,27 @@ const saveCalendar = async () => {
     }
   });
 
-  const appInfo = await (await axios.get('http://46.235.14.53:5000/')).data;
-  const lastDate = new Date(appInfo['end-date']);
+  const isConnected = (await NetInfo.fetch()).isConnected;
+  let firstDay, lastDay;
+
+  if (isConnected) {
+    const appInfo = (await axios.get('http://46.235.14.53:5000/')).data;
+    lastDay = new Date(appInfo['end-date']);
+    firstDay = new Date(appInfo['start-date']);
+
+    await AsyncStorage.setItem('@start-date', firstDay.toISOString());
+    await AsyncStorage.setItem('@end-date', firstDay.toISOString());
+
+  } else {
+    firstDay = new Date(await AsyncStorage.getItem('@start-date'));
+    lastDay = new Date(await AsyncStorage.getItem('@end-date'));
+  }
 
   for (const code in SelectedCourses) {
     SelectedCourses[code].sections
       .map(section => section.schedule.map(sch => {
-        const startDate = new Date(appInfo['start-date']);
+
+        const startDate = new Date(firstDay);
         startDate.setDate(startDate.getDate() + sch.day);
         startDate.setHours(8 + sch.start);
         startDate.setMinutes(40);
@@ -95,12 +112,13 @@ const saveCalendar = async () => {
           calendarId: calendarId,
           recurrenceRule: {
             frequency: 'weekly',
-            endDate: lastDate.toISOString()
+            endDate: lastDay.toISOString()
           },
           location: sch.location,
         })
       }));
   }
+  Toast.show("Saved to Calendar!");
 }
 
 const HeaderLeft = () => {
