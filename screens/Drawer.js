@@ -12,6 +12,7 @@ import SelectedCourses from '../utils/SelectedCourses';
 import SelectedColors from '../utils/SelectedColors';
 import PressedCourses from '../utils/PressedCourses';
 import { action } from 'mobx';
+import Toast from 'react-native-tiny-toast'
 
 const Drawer = observer(({ data, navigation, visibility }) => {
 
@@ -39,6 +40,34 @@ const Drawer = observer(({ data, navigation, visibility }) => {
     let durationController = false;
     const code = course.code
     const type = course.sections[0].type;
+
+    for (i = 0; i < course.sections.length; i++) {
+      for (j = 0; j < course.sections[i].schedule.length; j++) {
+        const sch = course.sections[i].schedule[j];
+        for (k = 0; k < sch.duration; k++) {
+          if (Durations[sch.day + 1].hour[sch.start + k].data.crn != '' &&
+            Durations[sch.day + 1].hour[sch.start + k].data.code != course.code) {
+            Toast.show(`Time Conflict\n${Durations[sch.day + 1].hour[sch.start + k].data.title}`,
+              {
+                minWidth: 105,
+                minHeight: 105,
+                backgroundColor: 'rgba(30,30,30,.85)',
+
+                imgStyle: {
+                  width: 45,
+                  height: 45
+                },
+                textStyle: {
+                  marginTop: 10
+                },
+                position: Toast.position.CENTER,
+                imgSource: require('../assets/icons/icon_fail.png'),
+              });
+            return;
+          }
+        }
+      }
+    }
 
     if (code in SelectedCourses) {
       if (SelectedCourses[code].types.includes(type)) {
@@ -94,17 +123,17 @@ const Drawer = observer(({ data, navigation, visibility }) => {
   }
 
   const setSchedule = item => {
-    data.courses.map(course => {
-      const code = course.code.replace(/\s/g, '');
-      const clsLenght = course.classes.length;
-      course.classes.map(cls => {
-        const type = cls.type;
-        cls.sections.map(sec => {
-          const crn = sec.crn;
-          const group = sec.group;
+    for (crs = 0; crs < data.courses.length; crs++) {
+      const code = data.courses[crs].code.replace(/\s/g, '');
+      const clsLenght = data.courses[crs].classes.length;
+      for (cls = 0; cls < clsLenght; cls++) {
+        const type = data.courses[crs].classes[cls].type;
+        for (sec = 0; sec < data.courses[crs].classes[cls].sections.length; sec++) {
+          const crn = data.courses[crs].classes[cls].sections[sec].crn;
+          const group = data.courses[crs].classes[cls].sections[sec].group;
           if (crn === item.crn) {
             const lessonName = code + type + ' - ' + group;
-            const schedule = sec.schedule;
+            const schedule = data.courses[crs].classes[cls].sections[sec].schedule;
 
             for (i = 0; i < schedule.length; i++) {
               schedule[i]['location'] = data.places[schedule[i].place]
@@ -124,9 +153,9 @@ const Drawer = observer(({ data, navigation, visibility }) => {
             setSelectedCourse(selectedCourse);
             return;
           }
-        });
-      });
-    });
+        }
+      }
+    }
   }
 
   const deleteSchedule = async item => {
@@ -390,7 +419,7 @@ const Drawer = observer(({ data, navigation, visibility }) => {
     const CloseButtonStyle = StyleSheet.compose({
       justifyContent: 'center',
       position: 'absolute',
-      width: 16, 
+      width: 16,
       height: 16,
       right: 0,
     });
