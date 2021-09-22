@@ -532,6 +532,7 @@ const Drawer = observer(({ data, navigation, visibility }) => {
         <TextInput
           style={SearchStyle}
           placeholder='Search For...'
+          autoCorrect={false}
           placeholderTextColor={Colors.black2}
           onChangeText={text => {
             for (let i = 0; i < useOpen.length; i++) {

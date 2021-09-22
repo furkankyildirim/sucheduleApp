@@ -7,8 +7,8 @@ export default {
     GRID_LARGE_WIDTH: Dimensions.get("window").width * 0.36,
     GRID_SMALL_WIDTH: Dimensions.get("window").width * 0.16,
 
-    DRAWER_BUTTON_SIZE: Dimensions.get("window").width * 0.125,
-    DRAWER_WIDTH: Dimensions.get("window").width * 0.775,
-    SEARCH_WIDTH: Dimensions.get("window").width * 0.45,
-    PICKER_WIDTH: Dimensions.get("window").width * 0.25,
+    DRAWER_BUTTON_SIZE: 48,
+    DRAWER_WIDTH: 300,//Dimensions.get("window").width * 0.775,
+    SEARCH_WIDTH: 175,//Dimensions.get("window").width * 0.45,
+    PICKER_WIDTH: 100//Dimensions.get("window").width * 0.25,
 }

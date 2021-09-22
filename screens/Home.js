@@ -155,8 +155,8 @@ const Home = observer(({ navigation }) => {
       : (index % 2 === 0 ? Colors.grey1 : Colors.grey3)
 
     const width = item.dayId === 0
-      ? layoutWidth * 0.16
-      : layoutWidth * 0.36
+      ? 64
+      : Constants.DEVICE_WIDTH * 0.40
 
     const GridRowStyle = StyleSheet.compose({
       backgroundColor: bgColor,
@@ -167,9 +167,14 @@ const Home = observer(({ navigation }) => {
     })
 
     const SelectedCourseStyle = StyleSheet.compose({
-      padding: 5,
+      //width:Constants.DEVICE_WIDTH * 0.375,
+      paddingHorizontal: 5,
+      height: layoutHeight * 0.96 / 20,
+      maxWidth: 350,
+      maxHeight: 75,
       flexDirection: 'row',
       justifyContent: 'center',
+      alignItems: 'center',
       backgroundColor: Durations[item.dayId].hour[index].data.color
     });
 
@@ -196,8 +201,8 @@ const Home = observer(({ navigation }) => {
 
   const GridColumn = ({ item, index }) => {
     const width = index === 0
-      ? layoutWidth * 0.16
-      : layoutWidth * 0.36
+    ? 64
+    : Constants.DEVICE_WIDTH * 0.40
 
     const bgColor = index % 2 === 0 ? Colors.blue2 : Colors.blue3
 
