@@ -390,7 +390,9 @@ const Drawer = observer(({ data, navigation, visibility }) => {
     const CloseButtonStyle = StyleSheet.compose({
       justifyContent: 'center',
       position: 'absolute',
-      right: 0
+      width: 16, 
+      height: 16,
+      right: 0,
     });
 
     return (
@@ -405,7 +407,7 @@ const Drawer = observer(({ data, navigation, visibility }) => {
           <TouchableOpacity style={CourseHeaderStyle} onPress={action(() => openCourse(index))}>
             <Text numberOfLines={1} style={fontStyles.courseTitle}>{item.code} - {item.name}</Text>
             <TouchableOpacity style={CloseButtonStyle} onPress={action(() => setPressedCourse(item.code))}>
-              <Icon name={'close'} style={{ ...fontStyles.courseIcon, fontSize: 15 }} />
+              <Icon name={'close'} style={{ ...fontStyles.courseIcon, fontSize: 16 }} />
             </TouchableOpacity>
           </TouchableOpacity>
         }
@@ -511,6 +513,7 @@ const Drawer = observer(({ data, navigation, visibility }) => {
         />
         <RNPickerSelect
           value={searchType}
+          useNativeAndroidPickerStyle={false}
           onValueChange={value => {
             for (let i = 0; i < useOpen.length; i++) {
               useOpen[i][1](false);
@@ -518,9 +521,9 @@ const Drawer = observer(({ data, navigation, visibility }) => {
             setSearchType(value)
           }}
           style={{
-            inputAndroidContainer: fontStyles.picker,
+            inputAndroid: fontStyles.picker,
             inputIOS: fontStyles.picker,
-            inputAndroid: PickerStyle,
+            inputAndroidContainer: PickerStyle,
             inputIOSContainer: PickerStyle
           }}
           placeholder={{}}

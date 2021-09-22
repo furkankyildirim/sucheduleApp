@@ -20,7 +20,6 @@ const Home = observer(({ navigation }) => {
   const [layoutWidth, setLayoutWidth] = useState(0);
   const [layoutHeight, setLayoutHeight] = useState(0);
   const [drawerVisibility, setDrawerVisibility] = useState(false);
-  const [isPressed, setIsPressed] = useState(false); 
   const [data, setData] = useState(null);
 
   useEffect(() => NetInfo.fetch().then(async state => {

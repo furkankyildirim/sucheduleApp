@@ -56,8 +56,7 @@ const copyCourses = () => {
 }
 
 const saveCalendar = async () => {
-  await RNCalendarEvents.requestPermissions((readOnly = false));
-
+  await RNCalendarEvents.requestPermissions();
   const calendars = await RNCalendarEvents.findCalendars();
   const idx = calendars.map(calendar => calendar.title).indexOf('SUchedule');
 
@@ -74,7 +73,8 @@ const saveCalendar = async () => {
     source: {
       isLocalAccount: true,
       name: 'SUchedule'
-    }
+    },
+    ownerAccount: 'SUchedule'
   });
 
   const isConnected = (await NetInfo.fetch()).isConnected;
@@ -115,7 +115,7 @@ const saveCalendar = async () => {
             endDate: lastDay.toISOString()
           },
           location: sch.location,
-        })
+        },{ sync: true })
       }));
   }
   Toast.show("Saved to Calendar!");
@@ -168,6 +168,7 @@ const App = () => {
             gestureEnabled: true,
             headerStyle: { backgroundColor: Colors.blue1 },
             headerTintColor: Colors.white,
+            headerTitleAlign: 'center',
             headerTitleStyle: fontStyles.courseDetailTitle
           }}
         />

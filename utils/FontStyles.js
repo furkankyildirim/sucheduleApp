@@ -2,14 +2,12 @@ import { StyleSheet } from 'react-native';
 import Colors from './Colors';
 
 const defaultColor = Colors.white
-const fontFamily = 'Roboto-Regular'
 
 const fontStyles = StyleSheet.create({
   largeTitle:{
     fontSize: 30,
     color: defaultColor,
     fontWeight: '600',
-    fontFamily: fontFamily
   },
   largeIcons:{
     fontSize: 40,
@@ -83,7 +81,6 @@ const fontStyles = StyleSheet.create({
     fontSize: 18,
     color: defaultColor,
     fontWeight: '600',
-    fontFamily: fontFamily
   },
   checkIcon:{
     fontSize: 24,
