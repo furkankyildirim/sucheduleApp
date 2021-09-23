@@ -17,7 +17,6 @@ import { action } from 'mobx';
 
 const Home = observer(({ navigation }) => {
 
-  const [layoutWidth, setLayoutWidth] = useState(0);
   const [layoutHeight, setLayoutHeight] = useState(0);
   const [drawerVisibility, setDrawerVisibility] = useState(false);
   const [data, setData] = useState(null);
@@ -145,7 +144,6 @@ const Home = observer(({ navigation }) => {
   }
 
   const setLayout = (event) => {
-    setLayoutWidth(event.nativeEvent.layout.width);
     setLayoutHeight(event.nativeEvent.layout.height);
   }
 
@@ -201,8 +199,8 @@ const Home = observer(({ navigation }) => {
 
   const GridColumn = ({ item, index }) => {
     const width = index === 0
-    ? 64
-    : Constants.DEVICE_WIDTH * 0.40
+      ? 64
+      : Constants.DEVICE_WIDTH * 0.40
 
     const bgColor = index % 2 === 0 ? Colors.blue2 : Colors.blue3
 
