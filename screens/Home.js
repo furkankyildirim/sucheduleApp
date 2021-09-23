@@ -23,14 +23,15 @@ const Home = observer(({ navigation }) => {
 
   useEffect(() => NetInfo.fetch().then(async state => {
     if (state.isConnected) {
-      const response = await axios.get('http://46.235.14.53:5000/suchedule/data');
+      const versionInfo = await axios.get('https://suchedule.herokuapp.com/version');
 
-      if (await AsyncStorage.getItem('@version') !== response.data.version.toString()) {
+      if (await AsyncStorage.getItem('@version') !== versionInfo.data.version.toString()) {
         await AsyncStorage.clear();
-        await AsyncStorage.setItem('@version', response.data.version.toString());
-      }
+        await AsyncStorage.setItem('@version', versionInfo.data.version.toString());
 
-      AsyncStorage.setItem('@data', JSON.stringify(response.data));
+        const response = await axios.get('https://suchedule.herokuapp.com/data');
+        await AsyncStorage.setItem('@data', JSON.stringify(response.data));
+      }
     }
 
     setData(JSON.parse(await AsyncStorage.getItem('@data')));
