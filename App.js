@@ -1,5 +1,5 @@
 import React from 'react';
-import { LogBox, View, Text, TouchableOpacity } from 'react-native';
+import { LogBox, View, Text, TouchableOpacity, StatusBar } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import RNCalendarEvents from "react-native-calendar-events";
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -115,7 +115,7 @@ const saveCalendar = async () => {
             endDate: lastDay.toISOString()
           },
           location: sch.location,
-        },{ sync: true })
+        }, { sync: true })
       }));
   }
   Toast.show("Saved to Calendar!");
@@ -152,7 +152,8 @@ const HeaderRight = () => {
 
 const App = () => {
   return (
-    <NavigationContainer>
+    <NavigationContainer>      
+      <StatusBar backgroundColor={'transparent'} translucent={true} barStyle="light-content" />
       <Stack.Navigator>
         <Stack.Screen name="Home" component={Home}
           options={{
