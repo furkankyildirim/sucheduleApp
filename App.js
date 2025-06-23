@@ -16,29 +16,35 @@ import SelectedCourses from './utils/SelectedCourses';
 import { action } from 'mobx';
 import axios from 'axios';
 import NetInfo from '@react-native-community/netinfo';
-import Toast from 'react-native-tiny-toast'
+import Toast from 'react-native-toast-message';
 
 LogBox.ignoreAllLogs(true);
 const Stack = createNativeStackNavigator();
 
 const clearAll = () => {
-  const keys = Object.keys(SelectedCourses);
-  for (i = 0; i < keys.length; i++) {
-    delete SelectedCourses[keys[i]];
+  action(() => {
+    const keys = Object.keys(SelectedCourses);
+    for (let i = 0; i < keys.length; i++) {
+      delete SelectedCourses[keys[i]];
+    }
 
-  }
+    for (let i = 1; i < Durations.length; i++) {
+      for (let j = 0; j < Durations[i].hour.length; j++) {
+        Durations[i].hour[j].data.title = '';
+        Durations[i].hour[j].data.code = '';
+        Durations[i].hour[j].data.crn = '';
+        Durations[i].hour[j].data.color = Colors.transparent;
+      }
+    }
+  })();
 
   AsyncStorage.setItem('@session', JSON.stringify(SelectedCourses));
 
-  for (i = 1; i < Durations.length; i++) {
-    for (j = 0; j < Durations[i].hour.length; j++) {
-      Durations[i].hour[j].data.title = '';
-      Durations[i].hour[j].data.code = '';
-      Durations[i].hour[j].data.crn = '';
-      Durations[i].hour[j].data.color = Colors.transparent;
-    }
-  }
-  Toast.show("Deleted All Courses");
+  Toast.show({
+    type: 'info',
+    position: 'bottom',
+    text1: 'Deleted All Courses'
+  });
 }
 
 const copyCourses = () => {
@@ -52,7 +58,11 @@ const copyCourses = () => {
     })
   }
   Clipboard.setString(copiedText);
-  Toast.show("Copied to Clipboard");
+  Toast.show({
+    type: 'info',
+    position: 'bottom',
+    text1: 'Copied to Clipboard'
+  });
 }
 
 const saveCalendar = async () => {
@@ -118,7 +128,11 @@ const saveCalendar = async () => {
         }, { sync: true })
       }));
   }
-  Toast.show("Saved to Calendar!");
+  Toast.show({
+    type: 'info',
+    position: 'bottom',
+    text1: 'Saved to Calendar!'
+  });
 }
 
 const HeaderLeft = () => {
@@ -174,6 +188,7 @@ const App = () => {
           }}
         />
       </Stack.Navigator>
+      <Toast />
     </NavigationContainer>
   )
 };

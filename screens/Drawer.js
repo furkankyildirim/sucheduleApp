@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { View, Text, Animated, StyleSheet, TextInput, FlatList, TouchableOpacity, useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import RNPickerSelect from 'react-native-picker-select';
@@ -12,7 +12,10 @@ import SelectedCourses from '../utils/SelectedCourses';
 import SelectedColors from '../utils/SelectedColors';
 import PressedCourses from '../utils/PressedCourses';
 import { action } from 'mobx';
-import Toast from 'react-native-tiny-toast'
+import Toast from 'react-native-toast-message';
+
+// Import the icon image
+const iconFail = require('../assets/icons/icon_fail.png');
 
 const Drawer = observer(({ data, navigation, visibility }) => {
 
@@ -21,19 +24,19 @@ const Drawer = observer(({ data, navigation, visibility }) => {
   const [searchText, setSearchText] = useState('');
 
   const heights = [
-    useRef(new Animated.Value(24)).current,
-    useRef(new Animated.Value(24)).current,
-    useRef(new Animated.Value(24)).current,
-    useRef(new Animated.Value(24)).current,
-    useRef(new Animated.Value(24)).current
+    useRef(new Animated.Value(0)).current,
+    useRef(new Animated.Value(0)).current,
+    useRef(new Animated.Value(0)).current,
+    useRef(new Animated.Value(0)).current,
+    useRef(new Animated.Value(0)).current,
+    useRef(new Animated.Value(0)).current
   ]
 
-  const activeDays = [];
-
-  for (i = 0; i < 6; i++) {
-    const [active, setActive] = useState(true);
-    activeDays.push([active, setActive]);
+  const activeDaysState = [];
+  for (let i = 0; i < 6; i++) {
+    activeDaysState.push(useState(true));
   }
+  const activeDays = activeDaysState;
 
   const setSelectedCourse = async course => {
 
@@ -41,101 +44,95 @@ const Drawer = observer(({ data, navigation, visibility }) => {
     const code = course.code
     const type = course.sections[0].type;
 
-    for (i = 0; i < course.sections.length; i++) {
-      for (j = 0; j < course.sections[i].schedule.length; j++) {
+    for (let i = 0; i < course.sections.length; i++) {
+      for (let j = 0; j < course.sections[i].schedule.length; j++) {
         const sch = course.sections[i].schedule[j];
-        for (k = 0; k < sch.duration; k++) {
+        for (let k = 0; k < sch.duration; k++) {
           if (Durations[sch.day + 1].hour[sch.start + k].data.crn != '' &&
             Durations[sch.day + 1].hour[sch.start + k].data.code != course.code) {
-            Toast.show(`Time Conflict\n${Durations[sch.day + 1].hour[sch.start + k].data.title}`,
-              {
-                minWidth: 105,
-                minHeight: 105,
-                backgroundColor: 'rgba(30,30,30,.85)',
-
-                imgStyle: {
-                  width: 45,
-                  height: 45
-                },
-                textStyle: {
-                  marginTop: 10
-                },
-                position: Toast.position.CENTER,
-                imgSource: require('../assets/icons/icon_fail.png'),
-              });
+            Toast.show({
+              type: 'error',
+              text1: 'Time Conflict',
+              position: 'bottom',
+              text2: `${Durations[sch.day + 1].hour[sch.start + k].data.title}`
+            });
             return;
           }
         }
       }
     }
 
-    if (code in SelectedCourses) {
-      if (SelectedCourses[code].types.includes(type)) {
-        const idx = SelectedCourses[code].types.indexOf(type);
-        SelectedCourses[code].sections[idx] = course.sections[0];
-        durationController = true;
-      } else {
-        SelectedCourses[code].types.push(type);
-        SelectedCourses[code].sections.push(course.sections[0]);
-        durationController = true;
-      }
-    } else {
-      course.types.push(type);
-      SelectedCourses[code] = course
-      durationController = true;
-    }
-
-    if (SelectedCourses[code].types.length === SelectedCourses[code].typeLenght && durationController) {
-      Durations.map(day => day.hour.map(hour => {
-        if (hour.data.code === code) {
-          const color = hour.data.color;
-          const colorIndex = SelectedColors.indexOf(color);
-          SelectedColors.slice(colorIndex, 1);
-
-          hour.data.title = '';
-          hour.data.code = '';
-          hour.data.crn = '';
-          hour.data.color = '';
+    action(() => {
+      if (code in SelectedCourses) {
+        if (SelectedCourses[code].types.includes(type)) {
+          const idx = SelectedCourses[code].types.indexOf(type);
+          SelectedCourses[code].sections[idx] = course.sections[0];
+          durationController = true;
+        } else {
+          SelectedCourses[code].types.push(type);
+          SelectedCourses[code].sections.push(course.sections[0]);
+          durationController = true;
         }
-      }))
-
-      let color = Colors.colorPalette[Math.floor(Math.random() * Colors.colorPalette.length)];
-      while (SelectedColors.includes(color)) {
-        color = Colors.colorPalette[Math.floor(Math.random() * Colors.colorPalette.length)];
+      } else {
+        course.types.push(type);
+        SelectedCourses[code] = course
+        durationController = true;
       }
 
-      SelectedCourses[code].sections.map(section => {
-        const lessonName = section.lessonName;
-        const crn = section.crn;
+      if (SelectedCourses[code].types.length === SelectedCourses[code].typeLenght && durationController) {
+        Durations.map(day => day.hour.map(hour => {
+          if (hour.data.code === code) {
+            const color = hour.data.color;
+            const colorIndex = SelectedColors.indexOf(color);
+            SelectedColors.splice(colorIndex, 1);
 
-        section.schedule.map(sch => {
-          for (i = 0; i < sch.duration; i++) {
-
-            Durations[sch.day + 1].hour[sch.start + i].data.title = lessonName;
-            Durations[sch.day + 1].hour[sch.start + i].data.crn = crn;
-            Durations[sch.day + 1].hour[sch.start + i].data.code = code;
-            Durations[sch.day + 1].hour[sch.start + i].data.color = color;
+            hour.data.title = '';
+            hour.data.code = '';
+            hour.data.crn = '';
+            hour.data.color = '';
           }
-        })
-      });
-    }
+        }))
+
+        let color = Colors.colorPalette[Math.floor(Math.random() * Colors.colorPalette.length)];
+        while (SelectedColors.includes(color)) {
+          color = Colors.colorPalette[Math.floor(Math.random() * Colors.colorPalette.length)];
+        }
+
+        SelectedCourses[code].sections.map(section => {
+          const lessonName = section.lessonName;
+          const crn = section.crn;
+
+          section.schedule.map(sch => {
+            for (let i = 0; i < sch.duration; i++) {
+
+              Durations[sch.day + 1].hour[sch.start + i].data.title = lessonName;
+              Durations[sch.day + 1].hour[sch.start + i].data.crn = crn;
+              Durations[sch.day + 1].hour[sch.start + i].data.code = code;
+              Durations[sch.day + 1].hour[sch.start + i].data.color = color;
+            }
+          })
+        });
+      }
+    })();
     await AsyncStorage.setItem('@session', JSON.stringify(SelectedCourses));
   }
 
   const setSchedule = item => {
-    for (crs = 0; crs < data.courses.length; crs++) {
+    if (!data || !data.courses) return;
+    
+    for (let crs = 0; crs < data.courses.length; crs++) {
       const code = data.courses[crs].code.replace(/\s/g, '');
       const clsLenght = data.courses[crs].classes.length;
-      for (cls = 0; cls < clsLenght; cls++) {
+      for (let cls = 0; cls < clsLenght; cls++) {
         const type = data.courses[crs].classes[cls].type;
-        for (sec = 0; sec < data.courses[crs].classes[cls].sections.length; sec++) {
+        for (let sec = 0; sec < data.courses[crs].classes[cls].sections.length; sec++) {
           const crn = data.courses[crs].classes[cls].sections[sec].crn;
           const group = data.courses[crs].classes[cls].sections[sec].group;
           if (crn === item.crn) {
             const lessonName = code + type + ' - ' + group;
             const schedule = data.courses[crs].classes[cls].sections[sec].schedule;
 
-            for (i = 0; i < schedule.length; i++) {
+            for (let i = 0; i < schedule.length; i++) {
               schedule[i]['location'] = data.places[schedule[i].place]
             }
 
@@ -161,47 +158,52 @@ const Drawer = observer(({ data, navigation, visibility }) => {
   const deleteSchedule = async item => {
     const crn = item.crn;
 
-    for (const code in SelectedCourses) {
-      const idx = SelectedCourses[code].sections.map(sec => sec.crn).indexOf(crn);
-      if (idx > -1) {
-        SelectedCourses[code].sections.map(sec => sec.schedule.map(sch => {
-          for (i = 0; i < sch.duration; i++) {
-            const color = Durations[sch.day + 1].hour[sch.start + i].data.color;
-            const colorIndex = SelectedColors.indexOf(color);
-            SelectedColors.slice(colorIndex, 1);
+    action(() => {
+      for (const code in SelectedCourses) {
+        const idx = SelectedCourses[code].sections.map(sec => sec.crn).indexOf(crn);
+        if (idx > -1) {
+          SelectedCourses[code].sections.map(sec => sec.schedule.map(sch => {
+            for (let i = 0; i < sch.duration; i++) {
+              const color = Durations[sch.day + 1].hour[sch.start + i].data.color;
+              const colorIndex = SelectedColors.indexOf(color);
+              SelectedColors.splice(colorIndex, 1);
 
-            Durations[sch.day + 1].hour[sch.start + i].data.title = '';
-            Durations[sch.day + 1].hour[sch.start + i].data.crn = '';
-            Durations[sch.day + 1].hour[sch.start + i].data.code = '';
-            Durations[sch.day + 1].hour[sch.start + i].data.color = '';
-          }
-        }));
+              Durations[sch.day + 1].hour[sch.start + i].data.title = '';
+              Durations[sch.day + 1].hour[sch.start + i].data.crn = '';
+              Durations[sch.day + 1].hour[sch.start + i].data.code = '';
+              Durations[sch.day + 1].hour[sch.start + i].data.color = '';
+            }
+          }));
 
-        SelectedCourses[code].types.splice(idx, 1);
-        SelectedCourses[code].sections.splice(idx, 1);
-        await AsyncStorage.setItem('@session', JSON.stringify(SelectedCourses));
-        return;
+          SelectedCourses[code].types.splice(idx, 1);
+          SelectedCourses[code].sections.splice(idx, 1);
+          return;
+        }
       }
-    }
+    })();
+    await AsyncStorage.setItem('@session', JSON.stringify(SelectedCourses));
   }
 
   const filterData = () => {
+    if (!data || !data.courses) return [];
+    
     let filteredData = [];
     const tempData = PressedCourses.isPressed ? PressedCourses.data : data.courses;
 
-    for (i = 0; i < tempData.length; i++) {
+    for (let i = 0; i < tempData.length; i++) {
       const course = { classes: [], code: tempData[i].code, name: tempData[i].name };
-      for (j = 0; j < tempData[i].classes.length; j++) {
+      for (let j = 0; j < tempData[i].classes.length; j++) {
         const cls = { sections: [], type: tempData[i].classes[j].type }
-        for (k = 0; k < tempData[i].classes[j].sections.length; k++) {
+        for (let k = 0; k < tempData[i].classes[j].sections.length; k++) {
           const section = {
             crn: tempData[i].classes[j].sections[k].crn,
             group: tempData[i].classes[j].sections[k].group,
             instructors: tempData[i].classes[j].sections[k].instructors,
             schedule: []
           }
-          for (l = 0; l < tempData[i].classes[j].sections[k].schedule.length; l++) {
-            if (activeDays[tempData[i].classes[j].sections[k].schedule[l].day][0]) {
+          for (let l = 0; l < tempData[i].classes[j].sections[k].schedule.length; l++) {
+            const dayIndex = tempData[i].classes[j].sections[k].schedule[l].day;
+            if (activeDays[dayIndex] && activeDays[dayIndex][0]) {
               const schedule = {
                 day: tempData[i].classes[j].sections[k].schedule[l].day,
                 duration: tempData[i].classes[j].sections[k].schedule[l].duration,
@@ -232,11 +234,11 @@ const Drawer = observer(({ data, navigation, visibility }) => {
 
       else if (searchType == 'instructor') {
         let instructorFilter = [];
-        for (i = 0; i < filteredData.length; i++) {
+        for (let i = 0; i < filteredData.length; i++) {
           const course = { classes: [], code: filteredData[i].code, name: filteredData[i].name };
-          for (j = 0; j < filteredData[i].classes.length; j++) {
+          for (let j = 0; j < filteredData[i].classes.length; j++) {
             const cls = { sections: [], type: filteredData[i].classes[j].type }
-            for (k = 0; k < filteredData[i].classes[j].sections.length; k++) {
+            for (let k = 0; k < filteredData[i].classes[j].sections.length; k++) {
               const section = {
                 crn: filteredData[i].classes[j].sections[k].crn,
                 group: filteredData[i].classes[j].sections[k].group,
@@ -264,13 +266,15 @@ const Drawer = observer(({ data, navigation, visibility }) => {
 
   const useOpen = [];
 
-  for (index = 0; index < data.courses.length; index++) {
+  for (let index = 0; index < (data?.courses?.length || 0); index++) {
     const [isOpened, Open] = useState(false)
     useOpen.push([isOpened, Open]);
   }
 
 
   const openCourse = index => {
+    if (!data || !data.courses) return;
+    
     if (!useOpen[index][0]) {
       for (let i = 0; i < data.courses.length; i++) {
         useOpen[i][1](false);
@@ -282,7 +286,7 @@ const Drawer = observer(({ data, navigation, visibility }) => {
 
   const setPressedCourse = code => {
     const idx = PressedCourses.data.map(crs => crs.code).indexOf(code);
-    PressedCourses.data.slice(idx, 1);
+    PressedCourses.data.splice(idx, 1);
     PressedCourses.isPressed = false;
 
     for (let i = 0; i < useOpen.length; i++) {
@@ -457,48 +461,72 @@ const Drawer = observer(({ data, navigation, visibility }) => {
 
 
   const DayContainer = ({ text, index }) => {
-    setHeight = (dayIndex) => {
-      heights[dayIndex].__getValue() === 24
 
-        ? Animated.timing(heights[dayIndex], {
-          toValue: 2,
-          duration: 500,
-          useNativeDriver: false,
-        }).start()
-
-        : Animated.timing(heights[dayIndex], {
+    const setHeight = useCallback(() => {
+      const currentHeight = heights[index]._value || heights[index].__getValue();
+      
+      if (activeDays[index] && activeDays[index][0]) {
+        // Day is active, animate to full height (24)
+        Animated.timing(heights[index], {
           toValue: 24,
-          duration: 500,
+          duration: 150,
           useNativeDriver: false,
-        }).start()
-    }
+        }).start();
+      } else {
+        // Day is inactive, animate to collapsed height (0)
+        Animated.timing(heights[index], {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: false,
+        }).start();
+      }
+    }, [activeDays, index]);
 
-    const DayStyle = StyleSheet.compose({
+    const setDays = useCallback(() => {
+      if (activeDays[index]) {
+        activeDays[index][1](!activeDays[index][0]);
+        setHeight();
+      }
+    }, [setHeight, activeDays, index]);
+
+    // Set initial height based on activeDays state
+    useEffect(() => {
+      setHeight();
+    }, [setHeight]);
+
+    const DayStyle = {
       backgroundColor: Colors.transparent,
       marginHorizontal: 3.25,
       justifyContent: 'flex-end',
+      alignItems: 'center',
       width: 35,
-      height: 24,
-    })
+      height: 30,
+      position: 'relative',
+    };
 
-    const AnimatedStyle = StyleSheet.compose({
+    const AnimatedStyle = {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
       width: 35,
-      zIndex: -1,
       height: heights[index],
       backgroundColor: Colors.blue6,
-    })
+      borderRadius: 2,
+    };
 
-    setDays = (dayIndex) => {
-      setHeight(dayIndex);
-      activeDays[dayIndex][1](!activeDays[dayIndex][0]);
-    }
+    const TextStyle = {
+      ...fontStyles.tinyTitle,
+      zIndex: 1,
+      paddingTop: 5,
+      position: 'relative',
+    };
 
     return (
-      <TouchableOpacity style={DayStyle} onPress={() => setDays(index)}>
-        <Text style={fontStyles.tinyTitle}>{text}</Text>
+      <TouchableOpacity style={DayStyle} onPress={setDays}>
         <Animated.View style={AnimatedStyle} />
+        <Text style={TextStyle}>{text}</Text>
       </TouchableOpacity>
-    )
+    );
   }
 
 
