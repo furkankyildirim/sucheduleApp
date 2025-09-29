@@ -91,7 +91,7 @@ const saveCalendar = async () => {
   let firstDay, lastDay;
 
   if (isConnected) {
-    const appInfo = (await axios.get('https://suchedule.herokuapp.com/version')).data;
+    const appInfo = (await axios.get('https://7fl5hvkwslbuefvbgfqx3cmwkq0eeuxg.lambda-url.eu-central-1.on.aws/version')).data;
     lastDay = new Date(appInfo['end-date']);
     firstDay = new Date(appInfo['start-date']);
 
